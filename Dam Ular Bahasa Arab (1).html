@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ms" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dam Ular Interaktif: Mura'ah Ahwal Ma'mumin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Import KFGQPC Font dari sumber CDN rasmi / Fallback Uthmanic Font */
+        @font-face {
+            font-family: 'KFGQPC Uthman Taha Naskh';
+            src: url('https://cdn.jsdelivr.net/gh/quran/quran.com-images/fonts/kfgqpc-uthman-taha-naskh/KFGQPCUthmanTahaNaskh-Regular.woff2') format('woff2'),
+                 url('https://cdn.jsdelivr.net/gh/quran/quran.com-images/fonts/kfgqpc-uthman-taha-naskh/KFGQPCUthmanTahaNaskh-Regular.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .arabic-text {
+            font-family: 'KFGQPC Uthman Taha Naskh', 'Amiri', 'Traditional Arabic', serif;
+            direction: rtl;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+
+    <div id="app" class="w-full max-w-5xl mx-auto p-4 md:p-6 flex-grow flex flex-col justify-center">
+        
+        <!-- LOGIN SCREEN -->
+        <div id="login-screen" class="bg-slate-800 border border-slate-700 p-8 rounded-2xl shadow-2xl max-w-md mx-auto w-full text-center space-y-6">
+            <div class="inline-block p-4 bg-emerald-500/10 text-emerald-400 rounded-full mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            </div>
+            <h1 class="arabic-text text-3xl md:text-4xl font-bold text-emerald-400 tracking-wide">لُعْبَةُ سُلَّمِ وَشَرِيطِ الحَدِيثِ</h1>
+            <p class="text-slate-400 text-sm">Dam Ular Pendidikan: Mura'ah Ahwal Ma'mumin Fi Solah</p>
+            
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Nama Pelajar / Nickname</label>
+                    <input type="text" id="player-nickname" placeholder="Masukkan nama anda..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors">
+                </div>
+                <button onclick="startGame()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2">
+                    <span class="arabic-text text-xl">ابدَأِ اللَّعِبَ</span>
+                    <span>(Mula Bermain)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- GAME DASHBOARD & BOARD SCREEN -->
+        <div id="game-screen" class="hidden flex-col space-y-6">
+            
+            <!-- Dashboard Header -->
+            <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-lg">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg" id="display-initial">P</div>
+                    <div>
+                        <div class="text-xs text-slate-400 uppercase tracking-wider">Pemain</div>
+                        <div id="display-name" class="font-bold text-white">Nama</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <div class="bg-slate-900 px-4 py-2 rounded-xl border border-slate-700 text-center">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Petak Semasa</div>
+                        <div id="display-pos" class="text-lg font-black text-emerald-400">1 / 30</div>
+                    </div>
+                    <div class="bg-slate-900 px-4 py-2 rounded-xl border border-slate-700 text-center">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Skor Betul</div>
+                        <div id="display-score" class="text-lg font-black text-amber-400">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Layout: Board + Controls -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Snake and Ladder Visual Grid (2D Board 30 Tiles) -->
+                <div class="lg:col-span-2 bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl flex flex-col justify-between">
+                    <div class="text-center mb-3">
+                        <h2 class="arabic-text text-xl font-bold text-emerald-400">لَوْحَةُ سُلَّمِ وَشَرِيطِ (Papan Dam Ular)</h2>
+                    </div>
+                    <!-- 6x5 Grid layout for 30 tiles -->
+                    <div id="board-grid" class="grid grid-cols-6 gap-2 aspect-[4/3] bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">
+                        <!-- Tiles dynamically populated via JS -->
+                    </div>
+                    <div class="mt-4 flex items-center justify-between text-xs text-slate-400 px-1">
+                        <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block mr-1"></span> Tangga (+ Naik)</span>
+                        <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block mr-1"></span> Ular (- Turun)</span>
+                    </div>
+                </div>
+
+                <!-- Dice & Control Panel -->
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl flex flex-col justify-between space-y-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">Tindakan Dadu</h3>
+                        <p class="text-xs text-slate-400 mb-6">Tekan butang di bawah untuk melontar dadu dan bergerak ke petak seterusnya bagi menjawab soalan.</p>
+                    </div>
+
+                    <!-- Dice Box -->
+                    <div class="flex flex-col items-center justify-center bg-slate-900 border border-slate-700 rounded-xl p-6 space-y-4">
+                        <div id="dice-display" class="w-20 h-20 bg-slate-800 border-2 border-emerald-500 rounded-2xl flex items-center justify-center text-4xl font-black text-emerald-400 shadow-inner">
+                            🎲
+                        </div>
+                        <div id="dice-message" class="text-xs text-slate-400 text-center min-h-[2rem]">Tekan butang lontar untuk bermula.</div>
+                    </div>
+
+                    <button id="roll-btn" onclick="rollDice()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="arabic-text text-lg">ارْمِ النَّرْدَ</span>
+                        <span>(Lontar Dadu)</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL SOALAN KUIZ (ARABIC WITH KFGQPC FONT + MALAY TRANSLATION) -->
+    <div id="quiz-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-2xl rounded-2xl p-6 md:p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+                <div class="flex items-center space-x-2">
+                    <span id="quiz-difficulty-badge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400">Aras</span>
+                    <span class="text-xs text-slate-400">Soalan Berkaitan Modul Hadis</span>
+                </div>
+                <div id="quiz-tile-num" class="text-xs font-bold text-slate-400">Petak 1</div>
+            </div>
+
+            <!-- Question Text -->
+            <div class="space-y-3">
+                <div class="arabic-text text-2xl md:text-3xl font-bold text-amber-300 text-right leading-relaxed" id="quiz-question-ar">
+                    <!-- Soalan Arab dalam font KFGQPC -->
+                </div>
+                <div class="text-sm text-slate-300 italic bg-slate-900/60 p-3 rounded-xl border border-slate-700/50" id="quiz-question-my">
+                    <!-- Terjemahan Melayu -->
+                </div>
+            </div>
+
+            <!-- Options -->
+            <div id="quiz-options" class="grid grid-cols-1 gap-3">
+                <!-- Pilihan Jawapan -->
+            </div>
+
+            <!-- Feedback / Result message -->
+            <div id="quiz-feedback" class="hidden p-4 rounded-xl text-sm font-medium"></div>
+
+            <div class="flex justify-end pt-2">
+                <button id="next-turn-btn" onclick="closeQuizModal()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center space-x-2">
+                    <span class="arabic-text text-lg">التَّالِي</span>
+                    <span>(Seterusnya)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KEMENANGAN / TAMAT PERMAINAN -->
+    <div id="win-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-8 shadow-2xl text-center space-y-6">
+            <div class="inline-block p-4 bg-amber-500/10 text-amber-400 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+            </div>
+            <h2 class="arabic-text text-3xl font-bold text-amber-400">مَبْرُوكٌ! (Tahniah)</h2>
+            <p id="win-message" class="text-slate-300 text-sm">Anda telah berjaya menamatkan permainan Dam Ular Hadis dengan cemerlang.</p>
+            <button onclick="location.reload()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center space-x-2">
+                <span class="arabic-text text-lg">إِعَادَةُ اللَّعْبَةِ</span>
+                <span>(Main Semula)</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Data Soalan 15 soalan (20% senang = 3 soalan, 30% sederhana = 5 soalan, 50% tinggi = 7 soalan)
+        // Semua soalan dan jawapan dalam bahasa Arab + Terjemahan Bahasa Melayu.
+        const questionsData = [
+            // ARAS SENANG (3 soalan)
+            {
+                id: 1,
+                difficulty: "سهل (Senang)",
+                qAr: "مَنْ رَاوِي الحَدِيثِ الخَامِسِ العِشْرُونَ؟",
+                qMy: "Siapakah perawi bagi hadis ke-25?",
+                options: [
+                    { ar: "أَبُو قَتَادَةَ الأَنْصَارِيُّ", my: "Abu Qatadah al-Ansari ra", correct: true },
+                    { ar: "أَنَسُ بْنُ مَالِكٍ", my: "Anas bin Malik ra", correct: false },
+                    { ar: "عَبْدُ اللَّهِ بْنُ عُمَرَ", my: "Abdullah bin Umar ra", correct: false }
+                ]
+            },
+            {
+                id: 2,
+                difficulty: "سهل (Senang)",
+                qAr: "مَا هُوَ لَقَبُ أَبِي قَتَادَةَ الأَنْصَارِيِّ؟",
+                qMy: "Apakah gelaran bagi Abu Qatadah al-Ansari ra?",
+                options: [
+                    { ar: "فَارِسُ رَسُولِ اللَّهِ وَحَارِسُهُ", my: "Pahlawan Rasulullah saw dan pengawal Baginda", correct: true },
+                    { ar: "أَمِينُ الأُمَّةِ", my: "Pemegang amanah umat ini", correct: false },
+                    { ar: "سَيْفُ اللَّهِ المَسْلُولُ", my: "Pedang Allah yang terhunus", correct: false }
+                ]
+            },
+            {
+                id: 3,
+                difficulty: "سهل (Senang)",
+                qAr: "مَاذَا سَمِعَ النَّبِيُّ فِي الصَّلَاةِ فَجَعَلَهُ يُخَفِّفُهَا؟",
+                qMy: "Apakah yang didengari oleh Nabi saw dalam solat lalu Baginda meringankannya?",
+                options: [
+                    { ar: "بُكَاءَ الصَّبِيِّ", my: "Tangisan bayi / anak kecil", correct: true },
+                    { ar: "صَوْتَ الرَّعْدِ", my: "Suara guruh", correct: false },
+                    { ar: "كَلَامَ النَّاسِ", my: "Perbualan orang ramai", correct: false }
+                ]
+            },
+
+            // ARAS SEDERHANA (5 soalan)
+            {
+                id: 4,
+                difficulty: "متوسط (Sederhana)",
+                qAr: "مَا مَعْنَى كَلِمَةِ (فَأَتَحَوَّزُ فِي صَلَاتِي)؟",
+                qMy: "Apakah maksud perkataan (فَأَتَحَوَّزُ فِي صَلَاتِي)?",
+                options: [
+                    { ar: "أُخَفِّفُهَا", my: "Aku meringankannya / pendekkan", correct: true },
+                    { ar: "أُطَوِّلُهَا كَثِيرًا", my: "Aku memanjangkannya dengan banyak", correct: false },
+                    { ar: "أُبْطِلُهَا وَأَقْطَعُهَا", my: "Aku membatalkan solatku", correct: false }
+                ]
+            },
+            {
+                id: 5,
+                difficulty: "متوسط (Sederhana)",
+                qAr: "كَمْ بَلَغَ عَدَدُ أَحَادِيثِ أَبِي قَتَادَةَ المَرْوِيَّةِ؟",
+                qMy: "Berapakah jumlah keseluruhan hadis yang diriwayatkan oleh Abu Qatadah ra?",
+                options: [
+                    { ar: "مِائَةٌ وَسَبْعُونَ حَدِيثًا (170)", my: "170 buah hadis", correct: true },
+                    { ar: "خَمْسُونَ حَدِيثًا (50)", my: "50 buah hadis", correct: false },
+                    { ar: "ثَلَاثُمِائَةِ حَدِيثٍ (300)", my: "300 buah hadis", correct: false }
+                ]
+            },
+            {
+                id: 6,
+                difficulty: "متوسط (Sederhana)",
+                qAr: "فِي أَيِّ غَزْوَةٍ كَانَ أَبُو قَتَادَةَ حَارِسًا لِلنَّبِيِّ لَيْلَةً؟",
+                qMy: "Pada peperangan manakah Abu Qatadah menjadi pengawal Nabi saw pada waktu malam?",
+                options: [
+                    { ar: "غَزْوَةُ بَدْرٍ", my: "Perang Badar", correct: true },
+                    { ar: "غَزْوَةُ أُحُدٍ", my: "Perang Uhud", correct: false },
+                    { ar: "غَزْوَةُ الخَنْدَقِ", my: "Perang Khandak", correct: false }
+                ]
+            },
+            {
+                id: 7,
+                difficulty: "متوسط (Sederhana)",
+                qAr: "مَا هُوَ دُعَاءُ النَّبِيِّ لِأَبِي قَتَادَةَ لَيْلَةَ البَدْرِ؟",
+                qMy: "Apakah doa Nabi saw untuk Abu Qatadah pada malam Badar?",
+                options: [
+                    { ar: "اللَّهُمَّ احْفِظْ أَبَا قَتَادَةَ كَمَا حَفِظَ نَبِيَّكَ", my: "Ya Allah, peliharalah Abu Qatadah sebagaimana dia memelihara Nabi-Mu", correct: true },
+                    { ar: "اللَّهُمَّ اغْفِرْ لِأَبِي قَتَادَةَ وَارْحَمْهُ", my: "Ya Allah, ampunilah Abu Qatadah dan rahmatilah dia", correct: false },
+                    { ar: "اللَّهُمَّ بَارِكْ لَهُ فِي مَالِهِ وَوَلَدِهِ", my: "Ya Allah, berkatilah harta dan anaknya", correct: false }
+                ]
+            },
+            {
+                id: 8,
+                difficulty: "متوسط (Sederhana)",
+                qAr: "مَا الحُكْمُ الفِقْهِيُّ لِمَنْ صَلَّى لِنَفْسِهِ (مُنْفَرِدًا)؟",
+                qMy: "Apakah hukum bagi sesiapa yang solat secara bersendirian (munfarid)?",
+                options: [
+                    { ar: "فَلْيُطَوِّلْ مَا شَاءَ", my: "Maka dia boleh memanjangkannya semahunya", correct: true },
+                    { ar: "يَجِبُ عَلَيْهِ الإِعْجَالُ دَائِمًا", my: "Wajib baginya menyegerakan solat sentiasa", correct: false },
+                    { ar: "يُكْرَهُ لَهُ القِرَاءَةُ الطَّوِيلَةُ", my: "Makruh bagi dirinya membaca ayat panjang", correct: false }
+                ]
+            },
+
+            // ARAS TINGGI (7 soalan)
+            {
+                id: 9,
+                difficulty: "صعب (Tinggi)",
+                qAr: "مَا هُوَ السَّبَبُ فِي كَرَاهِيَةِ شَقِّ النَّبِيِّ عَلَى أُمِّ الصَّبِيِّ فِي الصَّلَاةِ؟",
+                qMy: "Apakah sebab Baginda prihatin dan enggan menyusahkan ibu bayi tersebut dalam solat?",
+                options: [
+                    { ar: "لِئَلَّا يَسْتَغْشِي قَلْبُهَا بِهَمِّ طِفْلِهَا فَرُبَّمَا قَطَعَتِ الصَّلَاةَ", my: "Kerana takut hatinya disibukkan oleh risau tangisan anaknya, barangkali dia akan berhenti solat", correct: true },
+                    { ar: "لِأَنَّ البُكَاءَ يُبْطِلُ صَلَاةَ الجَمَاعَةِ قَطْعًا", my: "Kerana tangisan itu pasti membatalkan solat jemaah", correct: false },
+                    { ar: "لِأَنَّ الطِّفْلَ كَانَ مَرِيضًا مَرَضًا شَدِيدًا", my: "Kerana kanak-kanak tersebut sedang sakit berat", correct: false }
+                ]
+            },
+            {
+                id: 10,
+                difficulty: "صعب (Tinggi)",
+                qAr: "مَا هُوَ الضَّابِطُ الفِقْهِيُّ فِي تَطْوِيلِ الإِمَامِ أَوْ تَخْفِيفِهِ لِلتَّصَلِّي بِالنَّاسِ؟",
+                qMy: "Apakah kaedah penentu (dhabith) bagi imam dalam memanjangkan atau meringankan solat?",
+                options: [
+                    { ar: "مُرَاعَاةُ حَالِ المَأْمُومِينَ وَرِضَاهُمْ", my: "Meraikan keadaan makmum serta kere'daan mereka", correct: true },
+                    { ar: "حَسَبَ رَغْبَةِ الإِمَامِ وَاحْتِيَاجِهِ الشَّخْصِيِّ", my: "Mengikut citarasa dan keperluan peribadi imam", correct: false },
+                    { ar: "الالتِزَامُ بِقِرَاءَةِ سُورَةِ البَقَرَةِ كُلَّ لَيْلَةٍ", my: "Mestilah sentiasa membaca surah al-Baqarah", correct: false }
+                ]
+            },
+            {
+                id: 11,
+                difficulty: "صعب (Tinggi)",
+                qAr: "مَا مَعْنَى قَوْلِ العُلَمَاءِ: (الأَمْرُ بِالتَّخْفِيفِ لَا يَعْنِي الإِخْلَالَ بِأَرْكَانِ الصَّلَاةِ)؟",
+                qMy: "Apakah maksud ulama: (Perintah meringankan solat bukan bermaksud melanggar rukun solat)?",
+                options: [
+                    { ar: "يَجِبُ الإِتْيَانُ بِالأَرْكَانِ وَالسُّنَنِ وَالمَقَاصِدِ بِدُونَ نَقْصٍ مَخْلٍّ", my: "Wajib menyempurnakan rukun, sunat dan matlamat tanpa sebarang kecacatan yang merosakkan", correct: true },
+                    { ar: "يَجُوزُ تَرْكُ الفَاتِحَةِ لِأَجْلِ التَّخْفِيفِ السَّرِيعِ", my: "Boleh meninggalkan Surah al-Fatihah demi meringankan solat", correct: false },
+                    { ar: "يُمْكِنُ حَذْفُ الرُّكُوعِ وَالسُّجُودِ فِي الرَّكْعَةِ الأُولَى", my: "Boleh membuang ruku' dan sujud pada rakaat pertama", correct: false }
+                ]
+            },
+            {
+                id: 12,
+                difficulty: "صعب (Tinggi)",
+                qAr: "مَا هُوَ رَأْيُ الفَقِيهِ (أَشْهَبَ) مِنْ المَالِكِيَّةِ فِيمَنْ تَطَوَّعَ قَائِمًا؟",
+                qMy: "Apakah pandangan Feqah Asyhab dari mazhab Maliki mengenai orang yang solat sunat berdiri?",
+                options: [
+                    { ar: "لَيْسَ لَهُ أَنْ يُتِمَّهَا جَالِسًا", my: "Tidak dibenarkan baginya menyambung solat tersebut dalam keadaan duduk", correct: true },
+                    { ar: "يَجُوزُ لَهُ الجُلُوسُ مُطْلَقًا فَقَطْ", my: "Dia dibenarkan duduk secara mutlak pada bila-bila masa", correct: false },
+                    { ar: "يُبْطِلُ صَلَاتَهُ بِمُجَرَّدِ التَّعَبِ السَّرِيعِ", my: "Solatnya batal serta-merta apabila terasa penat", correct: false }
+                ]
+            },
+            {
+                id: 13,
+                difficulty: "صعب (Tinggi)",
+                qAr: "كَيْفَ استَدَلَّ العُلَمَاءُ بِهَذَا الحَدِيثِ عَلَى الأَحْكَامِ؟",
+                qMy: "Bagaimanakah ulama beristinbat (berdalil) dengan hadis ini dalam hukum?",
+                options: [
+                    { ar: "مَنْ قَصَدَ فِي الصَّلَاةِ الإِتْيَانَ بِشَيْءٍ مُسْتَحَبٍّ فَلَا يَجِبُ عَلَيْهِ لُزُومُهُ إِذَا عَرَضَ عُذْرٌ", my: "Sesiapa yang berniat melakukan perkara sunat dalam solat, tidak wajib atasnya meneruskan jika muncul uzur", correct: true },
+                    { ar: "كُلُّ سُنَّةٍ فِي الصَّلَاةِ تَنْقَلِبُ إِلَى فَرْضٍ عَيْنٍ", my: "Setiap perkara sunat dalam solat bertukar menjadi fardhu ain", correct: false },
+                    { ar: "يَحْرُمُ عَلَى الإِمَامِ قِرَاءَةُ غَيْرِ القِصَارِ قَطْعًا", my: "Haram bagi imam membaca surah selain surah pendek", correct: false }
+                ]
+            },
+            {
+                id: 14,
+                difficulty: "صعب (Tinggi)",
+                qAr: "مَا هُوَ رِوَايَةُ أَنَسِ بْنِ مَالِكٍ فِي كَيْفِيَّةِ تَخْفِيفِ النَّبِيِّ لِلصَّلَاةِ؟",
+                qMy: "Bagaimanakah riwayat Anas bin Malik tentang cara Baginda saw meringankan solatnya?",
+                options: [
+                    { ar: "كَانَ يَقْرَأُ بِالسُّورَةِ الخَفِيفَةِ أَوْ السُّورَةِ القَصِيرَةِ", my: "Baginda membaca surah yang ringan atau surah yang pendek", correct: true },
+                    { ar: "كَانَ يُسْرِعُ فِي الرُّكُوعِ فَقَطْ دُونَ القِرَاءَةِ", my: "Baginda hanya mempercepatkan ruku' sahaja tanpa bacaan", correct: false },
+                    { ar: "كَانَ يَحْذِفُ التَّشَهُّدَ الأَخِيرَ لِسُرْعَةِ الخَلَاصِ", my: "Baginda meninggalkan tasyahhud akhir demi kesegeraan", correct: false }
+                ]
+            },
+            {
+                id: 15,
+                difficulty: "صعب (Tinggi)",
+                qAr: "عَامِلٌ مُهِمٌّ يُشِيرُ إِلَيْهِ الحَدِيثُ فِي قَوْلِهِ: (وَرَفْعِهِ بِهِمْ) أَوْ رَفْعِ المَشَقَّةِ؟",
+                qMy: "Apakah pengajaran penting yang dirumuskan daripada sifat rahmat Nabi saw terhadap umatnya?",
+                options: [
+                    { ar: "بَيَانُ حِرْصِ الإِسْلَامِ عَلَى اليُسْرِ وَرَفْعِ المَشَقَّةِ عَنِ المُكَلَّفِينَ", my: "Penjelasan tentang penekanan Islam terhadap kemudahan dan menghilangkan kesusahan mukallaf", correct: true },
+                    { ar: "تَشْدِيدُ الأَحْكَامِ العِبَادَاتِ لِكَيْ تَعْظُمَ الأُجُورُ", my: "Memperketatkan hukum ibadat agar pahala semakin besar", correct: false },
+                    { ar: "إِلْغَاءُ صَلَاةِ الجَمَاعَةِ فِي حَالِ وُجُودِ الأَطْفَالِ", my: "Memansuhkan solat jemaah sekiranya terdapat kanak-kanak", correct: false }
+                ]
+            }
+        ];
+
+        // State Permainan
+        let gameState = {
+            playerName: "",
+            currentPosition: 1, // 1 hingga 30
+            score: 0,
+            activeQuestionIndex: null
+        };
+
+        // Pemetaan Ular & Tangga pada Papan 30 Petak
+        // Tangga (Naik): Petak 3 ke 12, Petak 7 ke 19, Petak 15 ke 24
+        // Ular (Turun): Petak 18 ke 6, Petak 26 ke 14, Petak 29 ke 20
+        const specialTiles = {
+            3: { type: 'ladder', target: 12, msg: 'Tangga Kejayaan! Naik ke petak 12.' },
+            7: { type: 'ladder', target: 19, msg: 'Tangga Kecemerlangan! Naik ke petak 19.' },
+            15: { type: 'ladder', target: 24, msg: 'Tangga Kefahaman! Naik ke petak 24.' },
+            18: { type: 'snake', target: 6, msg: 'Terkena Ular! Turun ke petak 6.' },
+            26: { type: 'snake', target: 14, msg: 'Terkena Ular! Turun ke petak 14.' },
+            29: { type: 'snake', target: 20, msg: 'Terkena Ular! Turun ke petak 20.' }
+        };
+
+        function startGame() {
+            const nameInput = document.getElementById('player-nickname').value.trim();
+            if(!nameInput) {
+                alert('Sila masukkan nama anda terlebih dahulu!');
+                return;
+            }
+            gameState.playerName = nameInput;
+            document.getElementById('display-name').textContent = nameInput;
+            document.getElementById('display-initial').textContent = nameInput.charAt(0).toUpperCase();
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('game-screen').classList.add('flex');
+
+            renderBoard();
+            updateDashboard();
+        }
+
+        // Render papan 30 petak (bercorak bengkang-bokang zig-zag)
+        function renderBoard() {
+            const boardGrid = document.getElementById('board-grid');
+            boardGrid.innerHTML = '';
+
+            // Grid 30 petak (susunan baris dari 30 ke 1)
+            for(let row = 4; row >= 0; row--) {
+                for(let col = 0; col < 6; col++) {
+                    let tileNum;
+                    if(row % 2 === 0) {
+                        tileNum = row * 6 + (col + 1);
+                    } else {
+                        tileNum = row * 6 + (6 - col);
+                    }
+
+                    const tileDiv = document.createElement('div');
+                    tileDiv.className = `relative rounded-xl border flex flex-col items-center justify-center p-2 transition-all ${
+                        tileNum === gameState.currentPosition 
+                            ? 'bg-emerald-600 border-emerald-400 shadow-lg shadow-emerald-500/40 scale-105 z-10' 
+                            : 'bg-slate-900/80 border-slate-700/60 text-slate-400'
+                    }`;
+
+                    let indicatorHTML = `<span class="text-xs font-bold ${tileNum === gameState.currentPosition ? 'text-white' : 'text-slate-300'}">${tileNum}</span>`;
+                    
+                    if(specialTiles[tileNum]) {
+                        const isLadder = specialTiles[tileNum].type === 'ladder';
+                        indicatorHTML += `<span class="text-[10px] px-1.5 py-0.5 rounded mt-1 font-semibold ${isLadder ? 'bg-emerald-500/30 text-emerald-300' : 'bg-rose-500/30 text-rose-300'}">${isLadder ? '↗ ' + specialTiles[tileNum].target : '↘ ' + specialTiles[tileNum].target}</span>`;
+                    }
+
+                    if(tileNum === gameState.currentPosition) {
+                        indicatorHTML += `<div class="absolute -top-2 -right-2 bg-amber-400 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-full shadow">Anda</div>`;
+                    }
+
+                    tileDiv.innerHTML = indicatorHTML;
+                    boardGrid.appendChild(tileDiv);
+                }
+            }
+        }
+
+        function updateDashboard() {
+            document.getElementById('display-pos').textContent = `${gameState.currentPosition} / 30`;
+            document.getElementById('display-score').textContent = gameState.score;
+            renderBoard();
+        }
+
+        // Lontar Dadu (1 hingga 3 langkah)
+        function rollDice() {
+            const rollBtn = document.getElementById('roll-btn');
+            rollBtn.disabled = true;
+            rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            let diceBox = document.getElementById('dice-display');
+            let diceMsg = document.getElementById('dice-message');
+            
+            // Animasi ringkas dadu
+            let counter = 0;
+            let animInterval = setInterval(() => {
+                let randomNum = Math.floor(Math.random() * 3) + 1; // 1 hingga 3 langkah
+                diceBox.textContent = randomNum;
+                counter++;
+                if(counter > 8) {
+                    clearInterval(animInterval);
+                    finalizeMove(randomNum);
+                }
+            }, 80);
+        }
+
+        function finalizeMove(steps) {
+            let nextPos = gameState.currentPosition + steps;
+            if(nextPos > 30) nextPos = 30; // Maksimum petak 30
+            gameState.currentPosition = nextPos;
+            updateDashboard();
+
+            document.getElementById('dice-message').textContent = `Anda mendapat angka ${steps}. Sila jawab soalan pada petak ${nextPos}!`;
+
+            // Pilih soalan secara rawak berdasarkan petak semasa (atau kitaran 15 soalan)
+            let qIndex = (nextPos - 1) % questionsData.length;
+            gameState.activeQuestionIndex = qIndex;
+
+            setTimeout(() => {
+                openQuizModal(qIndex);
+            }, 700);
+        }
+
+        function openQuizModal(index) {
+            const q = questionsData[index];
+            document.getElementById('quiz-difficulty-badge').textContent = q.difficulty;
+            document.getElementById('quiz-tile-num').textContent = `Petak ${gameState.currentPosition}`;
+            document.getElementById('quiz-question-ar').textContent = q.qAr;
+            document.getElementById('quiz-question-my').textContent = `Terjemahan: ${q.qMy}`;
+
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            // Acak pilihan jawapan
+            let shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-right p-4 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-700/80 transition-all flex flex-col space-y-1 group cursor-pointer";
+                btn.innerHTML = `
+                    <div class="arabic-text text-xl font-bold text-white group-hover:text-emerald-400 leading-relaxed">${opt.ar}</div>
+                    <div class="text-xs text-slate-400 text-left font-normal">${opt.my}</div>
+                `;
+                btn.onclick = () => checkAnswer(opt.correct, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('next-turn-btn').classList.add('hidden');
+            document.getElementById('quiz-modal').classList.remove('hidden');
+            document.getElementById('quiz-modal').classList.add('flex');
+        }
+
+        function checkAnswer(isCorrect, selectedBtn) {
+            const optionsContainer = document.getElementById('quiz-options');
+            const allBtns = optionsContainer.querySelectorAll('button');
+            allBtns.forEach(b => b.disabled = true);
+
+            const feedbackDiv = document.getElementById('quiz-feedback');
+            feedbackDiv.classList.remove('hidden');
+
+            if(isCorrect) {
+                selectedBtn.classList.remove('bg-slate-900', 'border-slate-700');
+                selectedBtn.classList.add('bg-emerald-600/20', 'border-emerald-500');
+                feedbackDiv.className = "p-4 rounded-xl text-sm font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+                feedbackDiv.textContent = "Tahniah! Jawapan anda betul. صَحِيحٌ مَبْرُوكٌ!";
+                gameState.score += 10;
+            } else {
+                selectedBtn.classList.remove('bg-slate-900', 'border-slate-700');
+                selectedBtn.classList.add('bg-rose-600/20', 'border-rose-500');
+                feedbackDiv.className = "p-4 rounded-xl text-sm font-medium bg-rose-500/20 text-rose-300 border border-rose-500/40";
+                feedbackDiv.textContent = "Maaf, jawapan anda kurang tepat. خَطَأٌ، حَاوِلْ مَرَّةً أُخْرَى.";
+            }
+
+            updateDashboard();
+            document.getElementById('next-turn-btn').classList.remove('hidden');
+        }
+
+        function closeQuizModal() {
+            document.getElementById('quiz-modal').classList.remove('flex');
+            document.getElementById('quiz-modal').classList.add('hidden');
+
+            // Semak jika ada Ular atau Tangga pada petak semasa
+            let currentPos = gameState.currentPosition;
+            if(specialTiles[currentPos]) {
+                const special = specialTiles[currentPos];
+                alert(special.msg);
+                gameState.currentPosition = special.target;
+                updateDashboard();
+            }
+
+            // Semak Kemenangan
+            if(gameState.currentPosition >= 30) {
+                document.getElementById('win-message').textContent = `Tahniah ${gameState.playerName}! Anda berjaya menamatkan pengembaraan Dam Ular Hadis dengan jumlah skor ${gameState.score} mata.`;
+                document.getElementById('win-modal').classList.remove('hidden');
+                document.getElementById('win-modal').classList.add('flex');
+                return;
+            }
+
+            // Reset butang dadu
+            const rollBtn = document.getElementById('roll-btn');
+            rollBtn.disabled = false;
+            rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('dice-message').textContent = "Giliran seterusnya! Sila lontar dadu.";
+        }
+    </script>
+</body>
+</html>
