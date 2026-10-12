@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة البحث عن الكنوز المخفية - فضْلُ بِنَاءِ المَسَاجِدِ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts & KFGQPC Uthman Taha Naskh -->
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700&family=Scheherazade+New:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'KFGQPC Uthman Taha Naskh';
+            src: url('https://cdn.jsdelivr.net/gh/mizanx/arabic-fonts@main/fonts/KFGQPCUthmanTahaNaskh-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        body {
+            font-family: 'KFGQPC Uthman Taha Naskh', 'Scheherazade New', 'Amiri', serif;
+            background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #022c22 100%);
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+        
+        .arabic-font {
+            font-family: 'KFGQPC Uthman Taha Naskh', 'Scheherazade New', 'Amiri', serif;
+        }
+
+        .malay-subtext {
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* Garden Map Texture */
+        .garden-bg {
+            background-color: #065f46;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.25) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(5, 150, 105, 0.2) 0%, transparent 45%),
+                radial-gradient(circle, rgba(16, 185, 129, 0.08) 10%, transparent 10.5%);
+            background-size: 100% 100%, 100% 100%, 32px 32px;
+        }
+
+        /* Floating animations for hidden items */
+        @keyframes gentle-pulse {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.06) translateY(-4px); }
+        }
+
+        .animate-item {
+            animation: gentle-pulse 3s ease-in-out infinite;
+        }
+
+        /* Found state styling */
+        .item-found {
+            filter: grayscale(80%);
+            opacity: 0.45;
+            cursor: default;
+            transform: scale(0.9) !important;
+            animation: none !important;
+        }
+
+        /* Custom Scrollbar for Modal */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #022c22;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #059669;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen p-3 md:p-6">
+
+    <header class="w-full max-w-5xl text-center py-2 mb-2">
+        <h1 class="text-3xl md:text-5xl font-bold arabic-font text-emerald-100 drop-shadow-lg tracking-wide leading-relaxed">
+            حَدِيقَةُ الْبَحْثِ عَنِ الْأَشْيَاءِ الْمَخْفِيَّةِ: فَضْلُ بِنَاءِ الْمَسَاجِدِ
+        </h1>
+        <p class="text-sm md:text-base malay-subtext text-emerald-200 opacity-90 mt-1">
+            Mencari Harta Karun Ilmu Hadis Kelebihan Membina Masjid (Dengan Terjemahan Bahasa Melayu)
+        </p>
+    </header>
+
+    <main class="w-full max-w-5xl flex-grow flex flex-col items-center justify-center my-2">
+
+        <!-- SCREEN 1: LOGIN / NICKNAME -->
+        <div id="login-screen" class="w-full max-w-md bg-emerald-900/90 border-2 border-emerald-500/80 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-md text-center">
+            <div class="mb-6">
+                <span class="text-6xl inline-block mb-2">🕌🌿🧠</span>
+                <h2 class="text-3xl font-bold text-emerald-100 arabic-font">تَسْجِيلُ الدُّخُولِ (Daftar Masuk)</h2>
+                <p class="text-sm text-emerald-300 malay-subtext mt-1">أدخل اسمك المستعار للبدء في اكتشاف كنوز فضل بناء المساجد</p>
+            </div>
+            <form id="login-form" onsubmit="startGame(event)" class="space-y-5">
+                <div>
+                    <label class="block text-right text-xs text-emerald-300 malay-subtext mb-1">Nama / Nickname Pemain:</label>
+                    <input type="text" id="nickname" required placeholder="اكتب اسمك هنا (Contoh: Ahmad)..." 
+                        class="w-full px-4 py-3 rounded-xl bg-emerald-950 border-2 border-emerald-600 text-white placeholder-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-center text-xl font-bold arabic-font">
+                </div>
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-xl transition transform active:scale-95 text-xl arabic-font tracking-wide">
+                    ابْدَأِ اللُّعْبَةَ الآنَ 🚀 (Mula Bermain)
+                </button>
+            </form>
+        </div>
+
+        <!-- SCREEN 2: GAME DASHBOARD & SINGLE GARDEN MAP -->
+        <div id="game-screen" class="hidden w-full flex flex-col items-center">
+            
+            <!-- Top Status Bar -->
+            <div class="w-full bg-emerald-950/90 border border-emerald-600 rounded-2xl p-4 mb-4 flex flex-wrap justify-between items-center shadow-xl gap-3 text-emerald-100">
+                <div class="flex items-center gap-2">
+                    <span class="bg-emerald-800/80 border border-emerald-600 px-3 py-1 rounded-xl font-bold text-sm md:text-base malay-subtext" id="display-player">
+                        اللاعب: -
+                    </span>
+                </div>
+                
+                <div class="flex items-center gap-3 md:gap-5 text-sm md:text-base malay-subtext">
+                    <span class="bg-teal-900/90 px-3 py-1.5 rounded-xl border border-teal-600">
+                        الأسئلة المجابة: <strong id="progress-count" class="text-amber-300 text-lg">0</strong> / 15
+                    </span>
+                    <span class="bg-amber-900/90 px-4 py-1.5 rounded-xl border border-amber-600">
+                        المجموع: <strong id="current-score" class="text-amber-200 text-lg">0</strong> نقطة
+                    </span>
+                </div>
+            </div>
+
+            <!-- Garden Map Header Banner -->
+            <div class="w-full bg-emerald-900/90 border border-emerald-600 rounded-xl p-3 text-center mb-3 shadow-md">
+                <p class="text-sm md:text-base text-emerald-100 font-bold arabic-font leading-relaxed">
+                    🕌 انقر على أي عنصر مخفي في الحديقة أدناه لإظهار السؤال والإجابة عنه!
+                </p>
+                <p class="text-xs text-emerald-300 malay-subtext">
+                    Klik pada mana-mana objek di taman bawah untuk membuka soalan.
+                </p>
+            </div>
+
+            <!-- Single Garden Interactive Canvas -->
+            <div class="w-full bg-emerald-900 border-4 border-emerald-600 rounded-3xl p-4 md:p-8 shadow-2xl relative garden-bg min-h-[480px] flex items-center justify-center">
+                
+                <!-- 15 Scattered Hidden Objects Grid -->
+                <div id="garden-map-grid" class="grid grid-cols-3 sm:grid-cols-5 gap-3 md:gap-6 w-full max-w-4xl my-auto">
+                    <!-- Populated dynamically by JavaScript -->
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SCREEN 3: QUESTION MODAL -->
+        <div id="question-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-emerald-950 border-2 border-emerald-500 rounded-3xl w-full max-w-2xl p-5 md:p-7 shadow-2xl text-right max-h-[90vh] overflow-y-auto">
+                
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center border-b border-emerald-800/80 pb-3 mb-4">
+                    <span id="modal-difficulty" class="px-3 py-1 rounded-lg text-xs md:text-sm font-bold bg-emerald-800 text-emerald-200 border border-emerald-600 malay-subtext">
+                        سهل
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <span id="modal-item-icon" class="text-2xl"></span>
+                        <h3 id="modal-item-title" class="text-xl md:text-2xl font-bold text-emerald-200 arabic-font">سؤال الحديث الشريف</h3>
+                    </div>
+                </div>
+                
+                <!-- Question Texts -->
+                <div class="mb-5 bg-emerald-900/40 p-4 rounded-2xl border border-emerald-800">
+                    <p id="modal-question-text" class="text-xl md:text-2xl text-white font-bold leading-relaxed arabic-font mb-2"></p>
+                    <div class="p-2.5 bg-emerald-900/80 border border-emerald-700/60 rounded-xl text-emerald-200 text-xs md:text-sm malay-subtext leading-relaxed" id="modal-question-ms">
+                        <!-- Malay translation for question -->
+                    </div>
+                </div>
+                
+                <!-- Options Container -->
+                <div id="modal-options-container" class="space-y-3 mb-5">
+                    <!-- Options populated dynamically -->
+                </div>
+
+                <!-- Feedback Banner -->
+                <div id="modal-feedback" class="hidden p-3.5 rounded-xl text-center font-bold text-base mb-4 malay-subtext"></div>
+
+                <!-- Actions -->
+                <div class="flex justify-between items-center pt-2">
+                    <button onclick="closeModal()" class="px-5 py-2.5 bg-emerald-900 hover:bg-emerald-800 text-emerald-200 text-sm font-semibold rounded-xl border border-emerald-700 transition malay-subtext">
+                        إغلاق (Tutup)
+                    </button>
+                    <button id="next-btn" onclick="confirmQuestionDone()" class="hidden px-7 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg rounded-xl shadow-lg transition arabic-font">
+                        مُتَابَعَةُ الْبَحْثِ ➡️ (Teruskan)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: RESULTS DASHBOARD -->
+        <div id="results-screen" class="hidden w-full max-w-lg bg-emerald-900/95 border-2 border-emerald-500 rounded-3xl p-8 shadow-2xl text-center">
+            <span class="text-7xl block mb-2">🏆🕌</span>
+            <h2 class="text-3xl md:text-4xl font-bold text-emerald-100 arabic-font mt-2">هَنِيئًا لَكَ إِتْمَامِ اللُّعْبَةِ!</h2>
+            <p class="text-emerald-300 mt-2 text-base malay-subtext">
+                Tahniah! Anda telah berjaya menjawab semua 15 soalan berkaitan Fadhl Bina' Masajid, <span id="res-player" class="font-bold text-white"></span>
+            </p>
+            
+            <div class="my-6 bg-emerald-950 border border-emerald-700 p-5 rounded-2xl flex justify-around items-center">
+                <div>
+                    <span class="text-xs text-emerald-400 block malay-subtext">العلامة النهائية (Jumlah Markah)</span>
+                    <span id="res-score" class="text-4xl font-bold text-amber-300 arabic-font">0</span> <span class="text-emerald-300 text-sm malay-subtext">/ 34</span>
+                </div>
+                <div class="w-px h-10 bg-emerald-800"></div>
+                <div>
+                    <span class="text-xs text-emerald-400 block malay-subtext">النسبة المئوية (Peratusan)</span>
+                    <span id="res-percentage" class="text-4xl font-bold text-teal-300 arabic-font">0%</span>
+                </div>
+            </div>
+
+            <button onclick="restartGame()" class="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-xl transition text-xl arabic-font">
+                إِعَادَةُ اللُّعْبَةِ 🔄 (Main Semula)
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-5xl text-center py-3 text-xs text-emerald-200/70 malay-subtext">
+        مبني استناداً إلى كتاب فضْلُ بِنَاءِ المَسَاجِدِ (معهد بونتيان - سامجان أحمد) | مع الترجمة الملايوية المساعدة
+    </footer>
+
+    <script>
+        // --- 15 QUESTIONS DATA (Based strictly on PDF: Easy 20% = 3 Qs, Medium 30% = 5 Qs, Hard 50% = 7 Qs) ---
+        const questionsData = [
+            // --- ARAS SENANG (20% = 3 Soalan) ---
+            {
+                id: 1,
+                level: "سهل (Senang)",
+                points: 1,
+                question: "مَنْ هُوَ الصَّحَابِيُّ الجَلِيلُ الرَّاوِي لِحَدِيثِ فَضْلِ بِنَاءِ المَسَاجِدِ؟",
+                questionMs: "Siapakah sahabat mulia yang meriwayatkan hadis kelebihan membina masjid?",
+                options: [
+                    { ar: "عُثْمَانُ بْنُ عَفَّانَ رَضِيَ اللَّهُ عَنْهُ", ms: "Othman bin Affan ra" },
+                    { ar: "أَبُو بَكْرٍ الصِّدِّيقُ رَضِيَ اللَّهُ عَنْهُ", ms: "Abu Bakar Al-Siddiq ra" },
+                    { ar: "عُمَرُ بْنُ الْخَطَّابِ رَضِيَ اللَّهُ عَنْهُ", ms: "Umar bin Al-Khattab ra" },
+                    { ar: "عَلِيُّ بْنُ أَبِي طَالِبٍ رَضِيَ اللَّهُ عَنْهُ", ms: "Ali bin Abi Talib ra" }
+                ],
+                correct: 0,
+                itemIcon: "🕌",
+                itemName: "نموذج المسجد"
+            },
+            {
+                id: 2,
+                level: "سهل (Senang)",
+                points: 1,
+                question: "مَا هُوَ الجَزَاءُ لِمَنْ بَنَى مَسْجِدًا يَبْتَغِي بِهِ وَجْهَ اللَّهِ؟",
+                questionMs: "Apakah balasan bagi sesiapa yang membina masjid kerana mencari redha Allah?",
+                options: [
+                    { ar: "بَنَى اللَّهُ لَهُ مِثْلَهُ فِي الجَنَّةِ", ms: "Allah akan membina untuknya seperti itu di dalam Syurga" },
+                    { ar: "رَزَقَهُ اللَّهُ مَالًا كَثِيرًا فِي الدُّنْيَا", ms: "Allah mengurniakan harta yang banyak di dunia" },
+                    { ar: "غَفَرَ اللَّهُ لَهُ ذُنُوبَ أَهْلِ بَيْتِهِ", ms: "Allah mengampunkan dosa ahli keluarganya" },
+                    { ar: "بَنَى اللَّهُ لَهُ قَصْرًا فِي المَدِينَةِ", ms: "Allah membina istana untuknya di Madinah" }
+                ],
+                correct: 0,
+                itemIcon: "📖",
+                itemName: "المصحف الشريف"
+            },
+            {
+                id: 3,
+                level: "سهل (Senang)",
+                points: 1,
+                question: "فِي أَيِّ عَامٍ هِجْرِيٍّ قَامَ عُثْمَانُ رَضِيَ اللَّهُ عَنْهُ بِتَوْسِعَةِ مَسْجِدِ الرَّسُولِ؟",
+                questionMs: "Pada tahun hijrah berapakah Saidina Othman ra memperluaskan Masjid Nabawi?",
+                options: [
+                    { ar: "فِي عَامِ ثَلَاثِينَ مِنَ الهِجْرَةِ", ms: "Pada tahun 30 hijrah" },
+                    { ar: "فِي عَامِ العَشْرِ مِنَ الهِجْرَةِ", ms: "Pada tahun ke-10 hijrah" },
+                    { ar: "فِي عَامِ الخَمْسِينَ مِنَ الهِجْرَةِ", ms: "Pada tahun 50 hijrah" },
+                    { ar: "فِي عَامِ الهِجْرَةِ النَّبَوِيَّةِ", ms: "Pada tahun hijrah Nabi" }
+                ],
+                correct: 0,
+                itemIcon: "🌴",
+                itemName: "سعف النخيل"
+            },
+
+            // --- ARAS SEDERHANA (30% = 5 Soalan) ---
+            {
+                id: 4,
+                level: "متوسط (Sederhana)",
+                points: 2,
+                question: "مِمَّا بَنَى رَسُولُ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ مَسْجِدَهُ الشَّرِيفَ قَدِيمًا؟",
+                questionMs: "Daripada apakah Rasulullah saw membina masjid baginda pada zaman dahulu?",
+                options: [
+                    { ar: "بِالطُّوبِ اللَّبِنِ وَسَقْفِهِ مِنَ الجَرِيدِ وَأَعْمِدَتِهِ مِنْ جُذُوعِ النَّخْلِ", ms: "Batu bata lumpur, atap pelepah kurma, dan tiang batang kurma" },
+                    { ar: "بِالحِجَارَةِ الصَّلْبَةِ وَالْأَحْجَارِ الثَّمِينَةِ", ms: "Batu keras dan batu permata" },
+                    { ar: "بِالْحَدِيدِ وَالْأَخْشَابِ المُصَنَّعَةِ", ms: "Besi dan kayu buatan" },
+                    { ar: "بِالطِّينِ الأَحْمَرِ الخَالِصِ", ms: "Tanah liat merah tulen" }
+                ],
+                correct: 0,
+                itemIcon: "🧱",
+                itemName: "الطوب اللبن"
+            },
+            {
+                id: 5,
+                level: "متوسط (Sederhana)",
+                points: 2,
+                question: "مَاذَا تَعْنِي كَلِمَةُ (تُخْصِرُ/مَفْحَصُ قَطَاةٍ) فِي حَدِيثِ رِوَايَةِ بِنَاءِ المَسْجِدِ؟",
+                questionMs: "Apakah maksud ungkapan 'Mafhas Qatoh' (sarang burung puyuh) dalam riwayat hadis?",
+                options: [
+                    { ar: "عُشُّ الطَّائِرِ الصَّغِيرِ (القَطَاةِ) حَيْثُ تَبِيضُ عَلَى بَسِيطِ الأَرْضِ", ms: "Sarang burung kecil (puyuh) di mana ia bertelur di atas permukaan tanah" },
+                    { ar: "مَكَانُ صَلَاةِ الإِمَامِ الكَبِيرِ", ms: "Tempat solat imam besar" },
+                    { ar: "مَقْبَرَةُ الشُّهَدَاءِ", ms: "Perkuburan syuhada" },
+                    { ar: "بِئْرُ المَاءِ العَذْبِ", ms: "Perigi air tawar" }
+                ],
+                correct: 0,
+                itemIcon: "🐦",
+                itemName: "طائر القطاة"
+            },
+            {
+                id: 6,
+                level: "متوسط (Sederhana)",
+                points: 2,
+                question: "مَا هُوَ المَقْصُودُ بِقَوْلِ النَّبِيِّ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ (يَبْتَغِي بِهِ وَجْهَ اللَّهِ)؟",
+                questionMs: "Apakah maksud sabda Nabi saw 'Mencari Wajah Allah'?",
+                options: [
+                    { ar: "الإِخْلَاصُ وَقَصْدُ رِضَا اللَّهِ وَحْدَهُ لَا رِيَاءَ وَلَا سُمْعَةَ", ms: "Ikhlas dan bertujuan mencari keredhaan Allah semata-mata, bukan riak" },
+                    { ar: "طَلَبُ الشُّهْرَةِ وَالمَانِعِ بَيْنَ النَّاسِ", ms: "Mencari populariti dan pujian orang ramai" },
+                    { ar: "بِنَاءُ المَسْجِدِ لِلْمُبَاهَاةِ بَيْنَ القَبَائِلِ", ms: "Membina masjid untuk bermegah-megah antara kabilah" },
+                    { ar: "جَمْعُ التَّبَرُّعَاتِ المَالِيَّةِ البَاهِظَةِ", ms: "Mengumpul sumbangan kewangan yang lumayan" }
+                ],
+                correct: 0,
+                itemIcon: "💎",
+                itemName: "الجوهرة المضيئة"
+            },
+            {
+                id: 7,
+                level: "متوسط (Sederhana)",
+                points: 2,
+                question: "كَيْفَ كَانَ مَوْقِفُ الصَّحَابَةِ بَعْدَ أَنْ أَقْنَعَهُمْ عُثْمَانُ رَضِيَ اللَّهُ عَنْهُ بِدَلِيلِهِ الوَاضِحِ؟",
+                questionMs: "Bagaimanakah pendirian para sahabat selepas Othman ra meyakinkan mereka dengan dalil yang jelas?",
+                options: [
+                    { ar: "رَضِيَ الصَّحَابَةُ، وَلَمْ تَبْقَ المُعَارَضَةُ طَوِيلًا", ms: "Para sahabat redha/terima, dan penentangan itu tidak berlarutan" },
+                    { ar: "اسْتَمَرُّوا فِي الإنْكَارِ الشَّدِيدِ عَلَيْهِ", ms: "Mereka meneruskan bantahan keras terhadapnya" },
+                    { ar: "قَامُوا بِهَدْمِ مَا بَنَاهُ جَمِيعًا", ms: "Mereka merobohkan apa yang dibinanya" },
+                    { ar: "هَاجَرُوا إِلَى البِلَادِ البَعِيدَةِ", ms: "Mereka berhijrah ke negeri jauh" }
+                ],
+                correct: 0,
+                itemIcon: "📜",
+                itemName: "الوثيقة التاريخية"
+            },
+            {
+                id: 8,
+                level: "متوسط (Sederhana)",
+                points: 2,
+                question: "مَا هُوَ حُكْمُ تَعْلِيمِ النَّبِيِّ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ لِأُمَّتِهِ مِنْ خِلَالِ هَذَا الحَدِيثِ؟",
+                questionMs: "Apakah pengajaran tentang kesungguhan Nabi saw mendidik umatnya melalui hadis ini?",
+                options: [
+                    { ar: "دَلِيلٌ عَلَى حِرْصِ النَّبِيِّ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ الشَّدِيدِ عَلَى تَعْلِيمِ أُمَّتِهِ", ms: "Bukti keprihatinan bersungguh-sungguh Nabi saw mendidik umatnya" },
+                    { ar: "إِشَارَةٌ إِلَى تَرْكِ الأُمُورِ الدُّنْيَوِيَّةِ كُلِّيَّةً", ms: "Isyarat meninggalkan urusan dunia sepenuhnya" },
+                    { ar: "وُجُوبُ السَّفَرِ الدَّائِمِ لِلدَّعْوَةِ", ms: "Wajib bermusafir sentiasa untuk dakwah" },
+                    { ar: "تَحْرِيمُ بِنَاءِ المَسَاجِدِ الكَبِيرَةِ", ms: "Haram membina masjid besar" }
+                ],
+                correct: 0,
+                itemIcon: "🌿",
+                itemName: "الورقة الخضراء"
+            },
+
+            // --- ARAS TINGGI (50% = 7 Soalan) ---
+            {
+                id: 9,
+                level: "عالي (Tinggi)",
+                points: 3,
+                question: "مَاذَا قَالَ الإِمَامُ ابْنُ الجَوْزِيِّ رَحِمَهُ اللَّهُ فِي مَنْ كَتَبَ اسْمَهُ عَلَى المَسْجِدِ الَّذِي بَنَاهُ؟",
+                questionMs: "Apakah kata Imam Ibn al-Jawzi rahimahullah tentang orang yang menulis namanya pada masjid yang dibinanya?",
+                options: [
+                    { ar: "كَانَ بَعِيدًا مِنَ الإِخْلَاصِ", ms: "Dia adalah jauh daripada keikhlasan" },
+                    { ar: "يُعْتَبَرُ فِعْلُهُ مَنْدُوبًا وَمُسْتَحَبًّا شَرْعًا", ms: "Perbuatannya dianggap sunat dan digalakkan" },
+                    { ar: "يَنَالُ أَجْرًا مُضَاعَفًا لِلتَّوْثِيقِ", ms: "Memperoleh pahala berganda untuk dokumentasi" },
+                    { ar: "يَجِبُ عَلَيْهِ فِعْلُ ذَلِكَ لِتَحْفِيزِ غَيْرِهِ", ms: "Wajib berbuat demikian untuk motivasi orang lain" }
+                ],
+                correct: 0,
+                itemIcon: "🖋️",
+                itemName: "قلم الحبر القديم"
+            },
+            {
+                id: 10,
+                level: "عالي (Tinggi)",
+                points: 3,
+                question: "لِمَ خَصَّ النَّبِيُّ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ طَائِرَ (القَطَاةِ) بِالذِّكْرِ فِي رِوَايَةِ السَّارِغِ؟",
+                questionMs: "Mengapakah Nabi saw secara khusus menyebut burung 'Qatoh' dalam riwayat tersebut?",
+                options: [
+                    { ar: "لِأَنَّهَا لَا تَبِيضُ فِي شَجَرَةٍ بَلْ عَلَى بَسِيطِ الأَرْضِ، وَهِيَ صَادِقَةٌ فِي إِخْبَارِهَا", ms: "Kerana ia bertelur di atas tanah rata bukan pokok, serta sifatnya yang tulus perkhabarannya" },
+                    { ar: "لِأَنَّهَا أَسْرَعُ الطُّيُورِ طَيَرَانًا فِي السَّمَاءِ", ms: "Kerana ia burung paling laju terbang di langit" },
+                    { ar: "لِأَنَّهَا تَعِيشُ فَقَطْ دَاخِلَ المَسَاجِدِ", ms: "Kerana ia hanya tinggal di dalam masjid" },
+                    { ar: "لِأَنَّ لَحْمَهَا حَلَالٌ لِلصَّائِمِينَ", ms: "Kerana dagingnya halal bagi orang berpuasa" }
+                ],
+                correct: 0,
+                itemIcon: "🍀",
+                itemName: "البرسيم الرباعي"
+            },
+            {
+                id: 11,
+                level: "عالي (Tinggi)",
+                points: 3,
+                question: "هَلْ يَقْتَصِرُ الأَجْرُ وَالثَّوَابُ فِي بِنَاءِ المَسَاجِدِ عَلَى البِنَاءِ المَادِّيِّ فَقَطْ؟",
+                questionMs: "Adakah pahala dan ganjaran membina masjid terhad kepada binaan fizikal semata-mata?",
+                options: [
+                    { ar: "لَا، بَلْ يَشْمَلُ مَنْ وَقَفَ أَرْضًا، أَوْ أَمَرَ بِالبِنَاءِ، أَوْ أَنْفَقَ، أَوْ عَامِلًا بِأَجْرٍ", ms: "Tidak, merangkumi juga wakaf tanah, pemberi arah, penyumbang, atau pekerja upahan" },
+                    { ar: "نَعَمْ، فَقَطْ لِمَنْ حَمَلَ الطُّوبَ بِيَدِهِ", ms: "Ya, hanya untuk sesiapa yang mengangkat bata dengan tangannya" },
+                    { ar: "نَعَمْ، فَقَطْ لِخُلَفَاءِ المُسْلِمِينَ رَسْمِيًّا", ms: "Ya, hanya untuk khalifah Islam secara rasmi" },
+                    { ar: "لَا يَحْصُلُ الأَجْرُ إِلَّا لِمَنْ صَلَّى فِيهِ فَقَطْ", ms: "Ppahala hanya didapati oleh orang yang solat di dalamnya sahaja" }
+                ],
+                correct: 0,
+                itemIcon: "🗝️",
+                itemName: "مفتاح الوقف"
+            },
+            {
+                id: 12,
+                level: "عالي (Tinggi)",
+                points: 3,
+                question: "مَا هِيَ القَاعِدَةُ الفِقْهِيَّةُ فِي مُضَاعَفَةِ الأَجْرِ فِي حَدِيثِ بِنَاءِ المَسْجِدِ (بَيْتٌ أَوْسَعُ مِنْهُ فِي الجَنَّةِ)؟",
+                questionMs: "Apakah kaedah ganjaran berlipat kali ganda berdasarkan hadis ganjaran rumah di Syurga?",
+                options: [
+                    { ar: "الحَسَنَةُ بِعَشْرِ أَمْثَالِهَا بِحُكْمِ العَدْلِ، وَالزِّيَادَةُ بِحُكْمِ الفَضْلِ وَالإِحْسَانِ", ms: "Satu kebaikan dibalas sepuluh mengikut keadilan, dan tambahan mengikut kelebihan kurniaan" },
+                    { ar: "الجَزَاءُ يَكُونُ مُطَابِقًا تَمَامًا لِحَجْمِ الدُّنْيَا", ms: "Balasan adalah sama persis dengan saiz dunia" },
+                    { ar: "لَا تُوجَدُ أَيُّ زِيَادَةٍ فِي الآخِرَةِ", ms: "Tiada sebarang tambahan di akhirat" },
+                    { ar: "الجَزَاءُ مَقْصُورٌ عَلَى الغِذَاءِ وَالرِّزْقِ", ms: "Balasan terhad kepada makanan dan rezeki" }
+                ],
+                correct: 0,
+                itemIcon: "🌟",
+                itemName: "نجمة الفضل"
+            },
+            {
+                id: 13,
+                level: "عالي (Tinggi)",
+                points: 3,
+                question: "مَا هُوَ أَثَرُ الرِّيَاءِ عَلَى الأَعْمَالِ الصَّالِحَةِ الكَبِيرَةِ مِثْلَ بِنَاءِ المَسَاجِدِ؟",
+                questionMs: "Apakah kesan riak terhadap amalan soleh yang besar seperti membina masjid?",
+                options: [
+                    { ar: "الرِّيَاءُ يُضِيعُ ثَوَابَ الأَعْمَالِ الصَّالِحَةِ كُلِّهَا وَلَوْ كَانَتْ عَظِيمَةً", ms: "Riak melenyapkan pahala amal soleh semuanya walaupun amalan itu besar" },
+                    { ar: "يَنْقُصُ الأَجْرَ بِنِصْفِهِ فَقَطْ", ms: "Mengurangkan pahala separuh sahaja" },
+                    { ar: "لَا يُؤَثِّرُ شَيْئًا إِذَا كَانَ البِنَاءُ كَبِيرًا", ms: "Tiada kesan jika binaan itu besar" },
+                    { ar: "يُضَاعَفُ الأَجْرُ بِسَبَبِ الشُّهْرَةِ", ms: "Ppahala berganda kerana populariti" }
+                ],
+                correct: 0,
+                itemIcon: "🔥",
+                itemName: "شعلة الإخلاص"
+            },
+            {
+                id: 14,
+                level: "عالي (Tinggi)",
+                points: 3,
+                question: "كَيْفَ جَاءَ لَفْظُ (مَسْجِدًا) فِي الحَدِيثِ الشَّرِيفِ، وَمَا الحِكْمَةُ مِنْ ذَلِكَ؟",
+                questionMs: "Bagaimanakah lafaz 'masjidan' hadir dalam hadis, dan apakah hikmahnya?",
+                options: [
+                    { ar: "جَاءَ نَكِرَةً لِيَشْمَلَ الثَّوَابُ وَالجَزَاءُ أَيَّ مَسْجِدٍ صَغِيرًا كَانَ أَوْ كَبِيرًا", ms: "Datang dalam bentuk nakirah agar pahala merangkumi apa jua masjid kecil atau besar" },
+                    { ar: "جَاءَ مَعْرِفَةً لِلتَّخْصِيصِ بِالمَسْجِدِ الحَرَامِ فَقَطْ", ms: "Datang makrifah khusus untuk Masjidil Haram sahaja" },
+                    { ar: "جَاءَ جَمْعًا لِلدَّلَالَةِ عَلَى المَسَاجِدِ السَّبْعَةِ", ms: "Datang jamak untuk 7 buah masjid" },
+                    { ar: "جَاءَ مُصَغَّرًا لِلتَّقْلِيلِ مِنْ شَأْنِ البِنَاءِ", ms: "Datang bentuk tasghir untuk merendahkan binaan" }
+                ],
+                correct: 0,
+                itemIcon: "📿",
+                itemName: "المسبحة الخضراء"
+            },
+            {
+                id: 15,
+                level: "عالي (Tinggi)",
+                points: 3,
+                question: "مَا هِي إِحْدَى أَهَمِّ العِبَرِ وَالإِرْشَادَاتِ المُسْتَفَادَةِ مِنْ حَدِيثِ فَضْلِ بِنَاءِ المَسَاجِدِ؟",
+                questionMs: "Apakah antara pengajaran dan petunjuk penting yang diambil daripada hadis kelebihan membina masjid?",
+                options: [
+                    { ar: "الإِخْلَاصُ شَرْطٌ لِقَبُولِ العَمَلِ، وَالحِرْصُ عَلَى تَعْلِيمِ الأُمَّةِ وَفَضْلِ بِنَاءِ المَسَاجِدِ", ms: "Ikhlas syarat amal diterima, prihatin mendidik umat, dan kelebihan bina masjid" },
+                    { ar: "وُجُوبُ السَّفَرِ لِلتِّجَارَةِ فِي البِلَادِ البَعِيدَةِ", ms: "Wajib bermusafir berniaga ke negeri jauh" },
+                    { ar: "تَرْكُ الجَمَاعَاتِ فِي الحَضَرِ", ms: "Meninggalkan solat berjemaah di bandar" },
+                    { ar: "بِنَاءُ البُيُوتِ العَالِيَةِ فَقَطْ", ms: "Membina rumah tinggi sahaja" }
+                ],
+                correct: 0,
+                itemIcon: "🌻",
+                itemName: "زهرة الحديقة"
+            }
+        ];
+
+        // --- GAME STATE ---
+        let state = {
+            nickname: "",
+            score: 0,
+            answeredIds: new Set(),
+            currentActiveQuestion: null
+        };
+
+        // Initialize Game
+        function startGame(e) {
+            e.preventDefault();
+            const nickInput = document.getElementById('nickname').value.trim();
+            if (!nickInput) return;
+
+            state.nickname = nickInput;
+            state.score = 0;
+            state.answeredIds.clear();
+
+            document.getElementById('display-player').innerText = `اللاعب: ${state.nickname}`;
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            renderFullGardenMap();
+            updateHeaderStats();
+        }
+
+        // Render Single Garden Map with all 15 hidden items
+        function renderFullGardenMap() {
+            const grid = document.getElementById('garden-map-grid');
+            grid.innerHTML = '';
+
+            questionsData.forEach((qItem) => {
+                const isFound = state.answeredIds.has(qItem.id);
+
+                const btn = document.createElement('button');
+                btn.id = `garden-item-${qItem.id}`;
+                
+                let baseClasses = "bg-emerald-950/85 border-2 border-emerald-500/70 rounded-2xl p-3 md:p-4 flex flex-col items-center justify-center transition duration-300 shadow-xl group cursor-pointer ";
+                if (isFound) {
+                    btn.className = baseClasses + "item-found border-emerald-900";
+                } else {
+                    btn.className = baseClasses + "hover:bg-emerald-800 hover:border-emerald-300 hover:scale-105 active:scale-95 animate-item";
+                }
+
+                btn.innerHTML = `
+                    <span class="text-4xl md:text-5xl mb-1.5 transition transform group-hover:scale-110">${qItem.itemIcon}</span>
+                    <span class="text-xs md:text-sm font-bold text-emerald-100 arabic-font tracking-wide">${qItem.itemName}</span>
+                    <span class="text-[10px] text-emerald-300 malay-subtext mt-0.5">${isFound ? '✅ (تم الحل)' : '🔍 انقر للفتح'}</span>
+                `;
+
+                btn.onclick = () => {
+                    if (state.answeredIds.has(qItem.id)) return;
+                    openQuestionModal(qItem);
+                };
+
+                grid.appendChild(btn);
+            });
+        }
+
+        function openQuestionModal(qObj) {
+            state.currentActiveQuestion = qObj;
+
+            const modal = document.getElementById('question-modal');
+            const modDiff = document.getElementById('modal-difficulty');
+            const modIcon = document.getElementById('modal-item-icon');
+            const modTitle = document.getElementById('modal-item-title');
+            const modText = document.getElementById('modal-question-text');
+            const modMs = document.getElementById('modal-question-ms');
+            const modOptions = document.getElementById('modal-options-container');
+            const feedback = document.getElementById('modal-feedback');
+            const nextBtn = document.getElementById('next-btn');
+
+            modDiff.innerText = `المستوى: ${qObj.level} (+${qObj.points} نقاط)`;
+            modIcon.innerText = qObj.itemIcon;
+            modTitle.innerText = qObj.itemName;
+            modText.innerText = qObj.question;
+            modMs.innerText = `🇲🇾 Terjemahan: ${qObj.questionMs}`;
+            modOptions.innerHTML = '';
+            feedback.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+
+            // Randomize options display order
+            let shuffledIndices = [0, 1, 2, 3].sort(() => 0.5 - Math.random());
+
+            shuffledIndices.forEach(idx => {
+                const opt = qObj.options[idx];
+                const optBtn = document.createElement('button');
+                optBtn.className = "w-full text-right p-3.5 md:p-4 rounded-2xl bg-emerald-900/90 hover:bg-emerald-800 border-2 border-emerald-700/80 text-white transition flex flex-col gap-1 shadow-md";
+                optBtn.innerHTML = `
+                    <span class="text-lg md:text-xl font-bold arabic-font leading-relaxed">${opt.ar}</span>
+                    <span class="text-xs md:text-sm text-emerald-300 malay-subtext">🇲🇾 ${opt.ms}</span>
+                `;
+                optBtn.onclick = () => checkAnswer(idx, qObj.correct, qObj.points, optBtn, modOptions);
+                modOptions.appendChild(optBtn);
+            });
+
+            modal.classList.remove('hidden');
+        }
+
+        function checkAnswer(selectedIdx, correctIdx, points, btnElement, optionsContainer) {
+            const allBtns = optionsContainer.getElementsByTagName('button');
+            const feedback = document.getElementById('modal-feedback');
+            const nextBtn = document.getElementById('next-btn');
+
+            for (let b of allBtns) {
+                b.disabled = true;
+            }
+
+            feedback.classList.remove('hidden');
+
+            const currentQ = state.currentActiveQuestion;
+
+            if (selectedIdx === correctIdx) {
+                btnElement.classList.remove('bg-emerald-900/90', 'border-emerald-700/80');
+                btnElement.classList.add('bg-green-800', 'border-green-400');
+                feedback.className = "p-3 rounded-xl text-center font-bold text-sm mb-4 bg-green-950 text-green-200 border border-green-600 malay-subtext";
+                feedback.innerText = `✨ أَحْسَنْتَ! إِجَابَةٌ صَحِيحَةٌ (+ ${points} نقاط) | Tahniah! Jawapan anda betul.`;
+                state.score += points;
+            } else {
+                btnElement.classList.remove('bg-emerald-900/90', 'border-emerald-700/80');
+                btnElement.classList.add('bg-red-900', 'border-red-500');
+
+                // Highlight correct answer in green
+                for (let b of allBtns) {
+                    if (b.innerHTML.includes(currentQ.options[correctIdx].ar)) {
+                        b.classList.remove('bg-emerald-900/90', 'border-emerald-700/80');
+                        b.classList.add('bg-green-800', 'border-green-400');
+                    }
+                }
+
+                feedback.className = "p-3 rounded-xl text-center font-bold text-sm mb-4 bg-red-950 text-red-200 border border-red-600 malay-subtext";
+                feedback.innerText = "❌ إِجَابَةٌ خَاطِئَةٌ. الإجابة الصحيحة موضحة باللون الأخضر. | Jawapan kurang tepat.";
+            }
+
+            state.answeredIds.add(currentQ.id);
+            nextBtn.classList.remove('hidden');
+            updateHeaderStats();
+        }
+
+        function confirmQuestionDone() {
+            closeModal();
+            renderFullGardenMap();
+
+            // Check if all 15 questions are answered
+            if (state.answeredIds.size >= questionsData.length) {
+                setTimeout(endGame, 400);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('question-modal').classList.add('hidden');
+        }
+
+        function updateHeaderStats() {
+            document.getElementById('progress-count').innerText = state.answeredIds.size;
+            document.getElementById('current-score').innerText = state.score;
+        }
+
+        function endGame() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+
+            document.getElementById('res-player').innerText = state.nickname;
+            document.getElementById('res-score').innerText = state.score;
+            
+            // Maximum Score = 3*1 + 5*2 + 7*3 = 34 points
+            let maxScore = 34;
+            let percentage = Math.round((state.score / maxScore) * 100);
+            document.getElementById('res-percentage').innerText = percentage + "%";
+        }
+
+        function restartGame() {
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('nickname').value = '';
+        }
+    </script>
+</body>
+</html>

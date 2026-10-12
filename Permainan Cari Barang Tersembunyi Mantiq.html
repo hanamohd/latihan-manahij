@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة البحث عن الكنوز المخفية - علم المنطق</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Scheherazade New & Amiri for crisp formal Arabic Naskh styling -->
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Scheherazade New', 'Amiri', 'Cairo', serif;
+            background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #022c22 100%);
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+        
+        .arabic-font {
+            font-family: 'Scheherazade New', 'Amiri', serif;
+        }
+
+        .malay-subtext {
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* Garden Map Texture */
+        .garden-bg {
+            background-color: #065f46;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.25) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(5, 150, 105, 0.2) 0%, transparent 45%),
+                radial-gradient(circle, rgba(16, 185, 129, 0.08) 10%, transparent 10.5%);
+            background-size: 100% 100%, 100% 100%, 32px 32px;
+        }
+
+        /* Floating animations for hidden items */
+        @keyframes gentle-pulse {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.06) translateY(-4px); }
+        }
+
+        .animate-item {
+            animation: gentle-pulse 3s ease-in-out infinite;
+        }
+
+        /* Found state styling */
+        .item-found {
+            filter: grayscale(80%);
+            opacity: 0.45;
+            cursor: default;
+            transform: scale(0.9) !important;
+            animation: none !important;
+        }
+
+        /* Custom Scrollbar for Modal */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #022c22;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #059669;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen p-3 md:p-6">
+
+    <header class="w-full max-w-5xl text-center py-2 mb-2">
+        <h1 class="text-3xl md:text-5xl font-bold arabic-font text-emerald-100 drop-shadow-lg tracking-wide leading-relaxed">
+            الْحَدِيقَةُ الْمَعْرِفِيَّةُ: لُعْبَةُ الْبَحْثِ عَنِ الْأَشْيَاءِ الْمَخْفِيَّةِ
+        </h1>
+        <p class="text-sm md:text-base malay-subtext text-emerald-200 opacity-90 mt-1">
+            Mencari Harta Karun Ilmu Mantiq di Taman Knowledge Garden (Dengan Terjemahan Bahasa Melayu)
+        </p>
+    </header>
+
+    <main class="w-full max-w-5xl flex-grow flex flex-col items-center justify-center my-2">
+
+        <!-- SCREEN 1: LOGIN / NICKNAME -->
+        <div id="login-screen" class="w-full max-w-md bg-emerald-900/90 border-2 border-emerald-500/80 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-md text-center">
+            <div class="mb-6">
+                <span class="text-6xl inline-block mb-2">🌳🌸🧠</span>
+                <h2 class="text-3xl font-bold text-emerald-100 arabic-font">تسجيل الدخول (Daftar Masuk)</h2>
+                <p class="text-sm text-emerald-300 malay-subtext mt-1">أدخل اسمك المستعار للبدء في اكتشاف كنز علم المنطق</p>
+            </div>
+            <form id="login-form" onsubmit="startGame(event)" class="space-y-5">
+                <div>
+                    <label class="block text-right text-xs text-emerald-300 malay-subtext mb-1">Nama / Nickname Pemain:</label>
+                    <input type="text" id="nickname" required placeholder="اكتب اسمك هنا (Contoh: Ahmad)..." 
+                        class="w-full px-4 py-3 rounded-xl bg-emerald-950 border-2 border-emerald-600 text-white placeholder-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-center text-xl font-bold arabic-font">
+                </div>
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-xl transition transform active:scale-95 text-xl arabic-font tracking-wide">
+                    ابْدَأِ اللُّعْبَةَ الآنَ 🚀 (Mula Bermain)
+                </button>
+            </form>
+        </div>
+
+        <!-- SCREEN 2: GAME DASHBOARD & SINGLE GARDEN MAP -->
+        <div id="game-screen" class="hidden w-full flex flex-col items-center">
+            
+            <!-- Top Status Bar -->
+            <div class="w-full bg-emerald-950/90 border border-emerald-600 rounded-2xl p-4 mb-4 flex flex-wrap justify-between items-center shadow-xl gap-3 text-emerald-100">
+                <div class="flex items-center gap-2">
+                    <span class="bg-emerald-800/80 border border-emerald-600 px-3 py-1 rounded-xl font-bold text-sm md:text-base malay-subtext" id="display-player">
+                        اللاعب: -
+                    </span>
+                </div>
+                
+                <div class="flex items-center gap-3 md:gap-5 text-sm md:text-base malay-subtext">
+                    <span class="bg-teal-900/90 px-3 py-1.5 rounded-xl border border-teal-600">
+                        الأسئلة المجابة: <strong id="progress-count" class="text-amber-300 text-lg">0</strong> / 15
+                    </span>
+                    <span class="bg-amber-900/90 px-4 py-1.5 rounded-xl border border-amber-600">
+                        المجموع: <strong id="current-score" class="text-amber-200 text-lg">0</strong> نقطة
+                    </span>
+                </div>
+            </div>
+
+            <!-- Garden Map Header Banner -->
+            <div class="w-full bg-emerald-900/90 border border-emerald-600 rounded-xl p-3 text-center mb-3 shadow-md">
+                <p class="text-sm md:text-base text-emerald-100 font-bold arabic-font leading-relaxed">
+                    🌸 انقر على أي عنصر مخفي في الحديقة أدناه لإظهار السؤال والإجابة عنه!
+                </p>
+                <p class="text-xs text-emerald-300 malay-subtext">
+                    Klik pada mana-mana objek di taman bawah untuk membuka soalan.
+                </p>
+            </div>
+
+            <!-- Single Garden Interactive Canvas -->
+            <div class="w-full bg-emerald-900 border-4 border-emerald-600 rounded-3xl p-4 md:p-8 shadow-2xl relative garden-bg min-h-[480px] flex items-center justify-center">
+                
+                <!-- 15 Scattered Hidden Objects Grid -->
+                <div id="garden-map-grid" class="grid grid-cols-3 sm:grid-cols-5 gap-3 md:gap-6 w-full max-w-4xl my-auto">
+                    <!-- Populated dynamically by JavaScript -->
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SCREEN 3: QUESTION MODAL -->
+        <div id="question-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-emerald-950 border-2 border-emerald-500 rounded-3xl w-full max-w-2xl p-5 md:p-7 shadow-2xl text-right max-h-[90vh] overflow-y-auto">
+                
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center border-b border-emerald-800/80 pb-3 mb-4">
+                    <span id="modal-difficulty" class="px-3 py-1 rounded-lg text-xs md:text-sm font-bold bg-emerald-800 text-emerald-200 border border-emerald-600 malay-subtext">
+                        سهل
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <span id="modal-item-icon" class="text-2xl"></span>
+                        <h3 id="modal-item-title" class="text-xl md:text-2xl font-bold text-emerald-200 arabic-font">سؤال علم المنطق</h3>
+                    </div>
+                </div>
+                
+                <!-- Question Texts -->
+                <div class="mb-5 bg-emerald-900/40 p-4 rounded-2xl border border-emerald-800">
+                    <p id="modal-question-text" class="text-xl md:text-2xl text-white font-bold leading-relaxed arabic-font mb-2"></p>
+                    <div class="p-2.5 bg-emerald-900/80 border border-emerald-700/60 rounded-xl text-emerald-200 text-xs md:text-sm malay-subtext leading-relaxed" id="modal-question-ms">
+                        <!-- Malay translation for question -->
+                    </div>
+                </div>
+                
+                <!-- Options Container -->
+                <div id="modal-options-container" class="space-y-3 mb-5">
+                    <!-- Options populated dynamically -->
+                </div>
+
+                <!-- Feedback Banner -->
+                <div id="modal-feedback" class="hidden p-3.5 rounded-xl text-center font-bold text-base mb-4 malay-subtext"></div>
+
+                <!-- Actions -->
+                <div class="flex justify-between items-center pt-2">
+                    <button onclick="closeModal()" class="px-5 py-2.5 bg-emerald-900 hover:bg-emerald-800 text-emerald-200 text-sm font-semibold rounded-xl border border-emerald-700 transition malay-subtext">
+                        إغلاق (Tutup)
+                    </button>
+                    <button id="next-btn" onclick="confirmQuestionDone()" class="hidden px-7 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg rounded-xl shadow-lg transition arabic-font">
+                        مُتَابَعَةُ الْبَحْثِ ➡️ (Teruskan)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: RESULTS DASHBOARD -->
+        <div id="results-screen" class="hidden w-full max-w-lg bg-emerald-900/95 border-2 border-emerald-500 rounded-3xl p-8 shadow-2xl text-center">
+            <span class="text-7xl block mb-2">🏆🌿</span>
+            <h2 class="text-3xl md:text-4xl font-bold text-emerald-100 arabic-font mt-2">هَنِيئًا لَكَ إِتْمَامِ اللُّعْبَةِ!</h2>
+            <p class="text-emerald-300 mt-2 text-base malay-subtext">
+                Tahniah! Anda telah berjaya menjawab semua 15 soalan Mantiq, <span id="res-player" class="font-bold text-white"></span>
+            </p>
+            
+            <div class="my-6 bg-emerald-950 border border-emerald-700 p-5 rounded-2xl flex justify-around items-center">
+                <div>
+                    <span class="text-xs text-emerald-400 block malay-subtext">العلامة النهائية (Jumlah Markah)</span>
+                    <span id="res-score" class="text-4xl font-bold text-amber-300 arabic-font">0</span> <span class="text-emerald-300 text-sm malay-subtext">/ 34</span>
+                </div>
+                <div class="w-px h-10 bg-emerald-800"></div>
+                <div>
+                    <span class="text-xs text-emerald-400 block malay-subtext">النسبة المئوية (Peratusan)</span>
+                    <span id="res-percentage" class="text-4xl font-bold text-teal-300 arabic-font">0%</span>
+                </div>
+            </div>
+
+            <button onclick="restartGame()" class="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-xl transition text-xl arabic-font">
+                إِعَادَةُ اللُّعْبَةِ 🔄 (Main Semula)
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-5xl text-center py-3 text-xs text-emerald-200/70 malay-subtext">
+        استناداً إلى ملخص علم المنطق (معهد بونتيان - سامجان أحمد) | مع الترجمة الملايوية المساعدة
+    </footer>
+
+    <script>
+        // --- 15 QUESTIONS DATA (From PDF Source: Aras Senang 20%, Aras Sederhana 30%, Aras Tinggi 50%) ---
+        const questionsData = [
+            // --- ARAS SENANG (20% = 3 Soalan) ---
+            {
+                id: 1,
+                level: "سهل (Senang)",
+                levelEn: "easy",
+                points: 1,
+                question: "فِي أَيِّ قَرْنٍ وَأَيِّ مَدِينَةٍ ظَهَرَتْ جَمَاعَةُ (السُّوْفَسْطَائِتِينَ)؟",
+                questionMs: "Pada kurun manakah dan di bandار manakah kumpulan Sophists muncul?",
+                options: [
+                    { ar: "فِي الْقَرْنِ الْخَامِسِ قَبْلَ الْمِيلَادِ فِي أَثِيْنَا", ms: "Pada kurun ke-5 sebelum masihi di Athens" },
+                    { ar: "فِي الْقَرْنِ الْأَوَّلِ الهجري فِي بَغْدَادَ", ms: "Pada kurun ke-1 hijrah di Baghdad" },
+                    { ar: "فِي الْقَرْنِ الْعَاشِرِ الميلادي فِي مِصْرَ", ms: "Pada kurun ke-10 masihi di Mesir" },
+                    { ar: "فِي عَصْرِ النَّهْضَةِ فِي أُورُوبَّا", ms: "Pada zaman Renaissance di Eropah" }
+                ],
+                correct: 0,
+                itemIcon: "🌳",
+                itemName: "شجرة الحكمة"
+            },
+            {
+                id: 2,
+                level: "سهل (Senang)",
+                levelEn: "easy",
+                points: 1,
+                question: "مَنْ هُوَ الْفَيْلَسُوفُ اليوناني الَّذِي وُصِفَ بِأَنَّهُ (الْمُعَلِّمُ الْأَوَّلُ) لِوَضْعِهِ قَوَاعِدَ عِلْمِ الْمَنْطِقِ؟",
+                questionMs: "Siapakah ahli falsafah Yunani yang digelar 'Guru Pertama' kerana meletakkan kaedah ilmu Mantiq?",
+                options: [
+                    { ar: "أَفْلَاطُونُ", ms: "Plato" },
+                    { ar: "أَرَسْطُو", ms: "Aristotle" },
+                    { ar: "سُقْرَاطُ", ms: "Socrates" },
+                    { ar: "الْفَارَابِيُّ", ms: "Al-Farabi" }
+                ],
+                correct: 1,
+                itemIcon: "📖",
+                itemName: "الكتاب المخفي"
+            },
+            {
+                id: 3,
+                level: "سهل (Senang)",
+                levelEn: "easy",
+                points: 1,
+                question: "مَا هُوَ التَّعْرِيفُ الاصْطِلَاحِيُّ لِعِلْمِ الْمَنْطِقِ؟",
+                questionMs: "Apakah takrif istilahi bagi ilmu Mantiq?",
+                options: [
+                    { ar: "قَانُونٌ تَعْصِمُ مُرَاعَاتُهُ الذِّهْنَ عَنِ الْخَطَأِ فِي الْفِكْرِ", ms: "Peraturan yang memelihara minda daripada kesilapan berfikir" },
+                    { ar: "عِلْمٌ يُعْنَى بِقَوَاعِدِ إِعْرَابِ الْكَلِمَاتِ", ms: "Ilmu yang mengkaji kaedah tatabahasa" },
+                    { ar: "دِرَاسَةُ حَرَكَاتِ الْكَوَاكِبِ وَالنُّجُومِ", ms: "Kajian pergerakan bintang dan planet" },
+                    { ar: "قَوَاعِدُ تَنْظِيمِ الْمُعَامَلَاتِ الْمَالِيَّةِ", ms: "Peraturan transaksi kewangan" }
+                ],
+                correct: 0,
+                itemIcon: "🌸",
+                itemName: "وردة المنطق"
+            },
+
+            // --- ARAS SEDERHANA (30% = 5 Soalan) ---
+            {
+                id: 4,
+                level: "متوسط (Sederhana)",
+                levelEn: "medium",
+                points: 2,
+                question: "مَنْ هُوَ العَالِمُ المُسْلِمُ الَّذِي قَامَ بِتَرْجَمَةِ كُتُبِ أَرَسْطُوَ الْمَنْطِقِيَّةِ فِي عَصْرِ التَّرْجَمَةِ؟",
+                questionMs: "Siapakah ulama Islam yang menterjemahkan kitab Mantiq Aristotle pada zaman terjemahan?",
+                options: [
+                    { ar: "عَبْدُ اللَّهِ بْنُ الْمُقَفَّعِ", ms: "Abdullah bin Al-Muqaffa'" },
+                    { ar: "الْإِمَامُ أَبُو حَامِدٍ الْغَزَالِيُّ", ms: "Imam Abu Hamid Al-Ghazali" },
+                    { ar: "ابْنُ سِينَا", ms: "Ibnu Sina" },
+                    { ar: "الْفَارَابِيُّ", ms: "Al-Farabi" }
+                ],
+                correct: 0,
+                itemIcon: "🦋",
+                itemName: "الفراشة الزرقاء"
+            },
+            {
+                id: 5,
+                level: "متوسط (Sederhana)",
+                levelEn: "medium",
+                points: 2,
+                question: "مَاذَا تَعْنِي كَلِمَةُ (تَعْصِمُ) فِي تَعْرِيفِ عِلْمِ الْمَنْطِقِ؟",
+                questionMs: "Apakah maksud perkataan 'Ta'simu' (تَعْصِمُ) dalam takrif Mantiq?",
+                options: [
+                    { ar: "تَحْفَظُ مُرَاعَاتُهُ الْعَقْلَ عَنِ الْخَطَأِ فِي الْفِكْرِ", ms: "Pematuhannya menjaga akal daripada kesilapan berfikir" },
+                    { ar: "تُقَوِّي بِنْيَةَ الْجِسْمِ وَالصِّحَّةَ", ms: "Menguatkan fizikal dan kesihatan" },
+                    { ar: "تَزِيدُ مِنَ السُّرْعَةِ فِي الْحِسَابِ", ms: "Menambah kelajuan pengiraan" },
+                    { ar: "تُسَاعِدُ عَلَى تَسْرِيعِ حِفْظِ النُّصُوصِ", ms: "Membantu mempercepatkan hafalan" }
+                ],
+                correct: 0,
+                itemIcon: "💧",
+                itemName: "قطرة الندى"
+            },
+            {
+                id: 6,
+                level: "متوسط (Sederhana)",
+                levelEn: "medium",
+                points: 2,
+                question: "مَا هُوَ مَوْضُوعُ عِلْمِ الْمَنْطِقِ الأساسي؟",
+                questionMs: "Apakah bidang perbincangan utama (موضوع) bagi ilmu Mantiq?",
+                options: [
+                    { ar: "الْمَعْلُومَاتُ التَّصَوُّرِيَّةُ وَالتَّصْدِيقِيَّةُ مِنْ حَيْثُ إِيصَالُهَا إِلَى الْمَجْهُولِ", ms: "Maklumat Tasawur dan Tasdiq dari sudut menyampaikan kepada yang majhul" },
+                    { ar: "الأَحْكَامُ الفِقْهِيَّةُ وَالتَّشْرِيعَاتُ الإِسْلَامِيَّةُ", ms: "Hukum fiqh dan perundangan Islam" },
+                    { ar: "تَارِيخُ الحُروبِ فِي العَصْرِ العَبَّاسِيِّ", ms: "Sejarah peperangan zaman Abbasiyah" },
+                    { ar: "قَوَاعِدُ الصَّرْفِ وَالبَلاغَةِ العَرَبِيَّةِ", ms: "Kaedah saraf dan balaghah Arab" }
+                ],
+                correct: 0,
+                itemIcon: "🍄",
+                itemName: "الفطر العجيب"
+            },
+            {
+                id: 7,
+                level: "متوسط (Sederhana)",
+                levelEn: "medium",
+                points: 2,
+                question: "مَاذَا يُقْصَدُ بِمَفْهُومِ (التَّصَوُّرِ) فِي عِلْمِ الْمَنْطِقِ؟",
+                questionMs: "Apakah yang dimaksudkan dengan konsep 'Tasawur' (التَّصَوُّر) dalam Mantiq?",
+                options: [
+                    { ar: "صُورَةٌ فِي الذِّهْنِ عَنْ شَيْءٍ كَلَفْظَةِ (إِنْسَانٍ)", ms: "Gambaran di minda tentang sesuatu seperti lafaz 'Manusia'" },
+                    { ar: "إثْبَاتُ نِسْبَةِ أَمْرٍ إِلَى أَمْرٍ آخَرَ نَفْيًا أَوْ إِثْبَاتًا", ms: "Menetapkan nisbah sesuatu secara positif atau negatif" },
+                    { ar: "الْقَوَاعِدُ النَّحْوِيَّةُ لِصِيَاغَةِ الْجُمَلِ", ms: "Kaedah nahu pembentukan ayat" },
+                    { ar: "الْأَحْكَامُ الشَّرْعِيَّةُ الْمُتَعَلِّقَةُ بِالْعِبَادَاتِ", ms: "Hukum syarak berkaitan ibadah" }
+                ],
+                correct: 0,
+                itemIcon: "🌻",
+                itemName: "زهرة عباد الشمس"
+            },
+            {
+                id: 8,
+                level: "متوسط (Sederhana)",
+                levelEn: "medium",
+                points: 2,
+                question: "مَا هِيَ أسْمَاءُ عِلْمِ الْمَنْطِقِ الأخرَى؟",
+                questionMs: "Apakah nama-nama lain bagi ilmu Mantiq?",
+                options: [
+                    { ar: "مِعْيَارُ الْعُلُومِ، عِلْمُ الِاسْتِدْلَالِ، مِيزَانُ الْعُلُومِ، وَقَانُونُ الْفِكْرِ", ms: "Standard Ilmu, Ilmu Pendalilan, Neraca Ilmu, dan Peraturan Pemikiran" },
+                    { ar: "عِلْمُ التَّفْسِيرِ، وَعِلْمُ الحَدِيثِ، وَعِلْمُ الفِقْهِ", ms: "Ilmu Tafsir, Hadis, dan Fiqh" },
+                    { ar: "عِلْمُ الْفَلَكِ، وَعِلْمُ الرِّيَاضِيَّاتِ، وَعِلْمُ الطَّبِيعَةِ", ms: "Ilmu Falak, Matematik, dan Fizik" },
+                    { ar: "عِلْمُ الْعَرُوضِ، وَعِلْمُ الْقَوَافِي، وَعِلْمُ البَدِيعِ", ms: "Ilmu Arudh, Qafiyah, dan Badi'" }
+                ],
+                correct: 0,
+                itemIcon: "🐦",
+                itemName: "الطائر المغرد"
+            },
+
+            // --- ARAS TINGGI (50% = 7 Soalan) ---
+            {
+                id: 9,
+                level: "عالي (Tinggi)",
+                levelEn: "hard",
+                points: 3,
+                question: "مَا هُوَ حُكْمُ تَعْلُّمِ وَالاشْتِغَالِ بِعِلْمِ الْمَنْطِقِ عِنْدَ الإِمَامِ الغَزَالِيِّ؟",
+                questionMs: "Apakah hukum mempelajari ilmu Mantiq menurut Imam Al-Ghazali?",
+                options: [
+                    { ar: "الْجَوَازُ، حَيْثُ قَالَ: (مَنْ لَا يَعْرِفُ الْمَنْطِقَ، فَلَا ثِقَةَ بِعِلْمِهِ)", ms: "Harus, di mana beliau berkata: 'Barangsiapa tidak tahu Mantiq, tiada kepercayaan pada ilmunya'" },
+                    { ar: "التَّحْرِيمُ المُطْلَقُ مِثْلَ رَأْيِ ابْنِ الصَّلَاحِ وَالنَّوَوِيِّ", ms: "Haram mutlak seperti pandangan Ibn Salah & Nawawi" },
+                    { ar: "الوُجُوبُ العَيْنِيُّ عَلَى كُلِّ مُسْلِمٍ", ms: "Wajib 'ain ke atas setiap Muslim" },
+                    { ar: "الكَرَاهَةُ التَّنْزِيهِيَّةُ", ms: "Makruh tanzih" }
+                ],
+                correct: 0,
+                itemIcon: "💎",
+                itemName: "الجوهرة المخفية"
+            },
+            {
+                id: 10,
+                level: "عالي (Tinggi)",
+                levelEn: "hard",
+                points: 3,
+                question: "مَا هُوَ التَّفْصِيلُ الصَّحِيحُ فِي حُكْمِ الِاشْتِغَالِ بِعِلْمِ الْمَنْطِقِ بَيْنَ الْعُلَمَاءِ؟",
+                questionMs: "Apakah perincian hukum mempelajari Mantiq yang paling sahih di sisi ulama?",
+                options: [
+                    { ar: "يَجُوزُ لِقَوِيِّ الْفِطْنَةِ الْمُشْتَغِلِ بِالْكِتَابِ وَالسُّنَّةِ، وَيَحْرُمُ عَلَى غَيْرِهِ", ms: "Harus bagi yang bijak serta mahir Al-Quran & Sunnah; haram bagi selainnya" },
+                    { ar: "يَحْرُمُ عَلَى جَمِيعِ طُلَّابِ العِلْمِ دُونَ اسْتِثْنَاءٍ", ms: "Haram kepada semua penuntut ilmu" },
+                    { ar: "يَجُوزُ لِكُلِّ النَّاسِ بِدونِ شُرُوطٍ", ms: "Harus kepada semua orang tanpa syarat" },
+                    { ar: "يَجِبُ وُجُوبًا كِفَائِيًّا عَلَى الأَطِبَّاءِ فَقَطْ", ms: "Wajib kifayah kepada doktor sahaja" }
+                ],
+                correct: 0,
+                itemIcon: "🗝️",
+                itemName: "المفتاح القديم"
+            },
+            {
+                id: 11,
+                level: "عالي (Tinggi)",
+                levelEn: "hard",
+                points: 3,
+                question: "كَيْفَ كَانَتْ طَرِيقَةُ (سُقْرَاطَ) فِي تَعْلِيمِ تَلَامِيذِهِ لِإِثْبَاتِ أَنَّ حَقَائِقَ الْأَشْيَاءِ ثَابِتَةٌ؟",
+                questionMs: "Bagaimanakah kaedah Socrates mengajar muridnya untuk membuktikan bahawa hakikat sesuatu itu tetap?",
+                options: [
+                    { ar: "عَنْ طَرِيقِ الْحِوَارِ وَالْمُنَاقَشَةِ وَالْإِقْنَاعِ", ms: "Melalui dialog, perbincangan, dan meyakinkan" },
+                    { ar: "عَنْ طَرِيقِ الْحِفْظِ التَّامِّ لِلْمُتُونِ وَالْأَشْعَارِ", ms: "Melalui hafalan penuh matan dan syair" },
+                    { ar: "عَنْ طَرِيقِ التَّجَارِبِ الْمِخْبَرِيَّةِ", ms: "Melalui eksperimen makmal" },
+                    { ar: "عَنْ طَرِيقِ السَّفَرِ وَالرِّحْلَاتِ", ms: "Melalui pengembaraan" }
+                ],
+                correct: 0,
+                itemIcon: "🐞",
+                itemName: "دعسوقة الحديقة"
+            },
+            {
+                id: 12,
+                level: "عالي (Tinggi)",
+                levelEn: "hard",
+                points: 3,
+                question: "مَا هِيَ إِحْدَى فَوَائِدِ دِرَاسَةِ عِلْمِ الْمَنْطِقِ؟",
+                questionMs: "Apakah salah satu faedah utama mempelajari ilmu Mantiq?",
+                options: [
+                    { ar: "تَرْبِيَةُ مَلَكَةِ النَّقْدِ وَالتَّقْدِيرِ وَوَزْنِ الْأُمُورِ وَزْنًا صَحِيحًا", ms: "Memupuk kebolehan mengkritik, menilai, dan menimbang sesuatu dengan betul" },
+                    { ar: "زِيَادَةُ الدَّخْلِ المَالِيِّ لِلدَّوْلَةِ", ms: "Meningkatkan pendapatan kewangan negara" },
+                    { ar: "تَسْرِيعُ الحَرْكَةِ العَسْكَرِيَّةِ", ms: "Mempercepatkan pergerakan tentera" },
+                    { ar: "تَحْسِينُ صِنَاعَةِ الزِّرَاعَةِ", ms: "Memperbaik industri pertanian" }
+                ],
+                correct: 0,
+                itemIcon: "🐌",
+                itemName: "القوقعة الهادئة"
+            },
+            {
+                id: 13,
+                level: "عالي (Tinggi)",
+                levelEn: "hard",
+                points: 3,
+                question: "مَا هِيَ نِسْبَةُ عِلْمِ الْمَنْطِقِ إِلَى غَيْرِهِ مِنَ الْعُلُومِ؟",
+                questionMs: "Apakah hubungan/nisbah (نسبته) ilmu Mantiq berbanding ilmu-ilmu lain?",
+                options: [
+                    { ar: "التَّبَايُنُ (الِاخْتِلَافُ)", ms: "At-Tabayun (Perbezaan / Berlainan)" },
+                    { ar: "التَّسَاوِي التَّامُّ فِي جَمِيعِ الْمَسَائِلِ", ms: "Kesamarataan penuh" },
+                    { ar: "التَّرَادُفُ اللُّغَوِيُّ الصَّرِيحُ", ms: "Sinonim bahasa secara jelas" },
+                    { ar: "العُمُومُ وَالخُصُومُ المُطْلَقُ", ms: "Umum dan khusus mutlak" }
+                ],
+                correct: 0,
+                itemIcon: "🌿",
+                itemName: "الورقة الخضراء"
+            },
+            {
+                id: 14,
+                level: "عالي (Tinggi)",
+                levelEn: "hard",
+                points: 3,
+                question: "مَا هِيَ مَسَائِلُ عِلْمِ الْمَنْطِقِ الْأَسَاسِيَّةُ؟",
+                questionMs: "Apakah persoalan asas (مسائله) yang dibincangkan dalam ilmu Mantiq?",
+                options: [
+                    { ar: "الْمُعَرِّفَاتُ وَأَنْوَاعُهَا، وَالْقَضَايَا وَأَحْكَامُهَا", ms: "Takrif-takrif serta jenisnya, dan ayat penyata (Qadhaya) serta hukumnya" },
+                    { ar: "الْعِبَادَاتُ وَالْمُعَامَلَاتِ وَالْجِنَايَاتِ", ms: "Ibadah, muamalat, dan jenayah" },
+                    { ar: "النَّحْوُ وَالصَّرْفُ وَالْبَلَاغَةُ", ms: "Nahu, saraf, dan balaghah" },
+                    { ar: "الْفِيزْيَاءُ وَالْكِيمْيَاءُ وَالرِّيَاضِيَّاتُ", ms: "Fizik, kimia, dan matematik" }
+                ],
+                correct: 0,
+                itemIcon: "🍀",
+                itemName: "البرسيم الرباعي"
+            },
+            {
+                id: 15,
+                level: "عالي (Tinggi)",
+                levelEn: "hard",
+                points: 3,
+                question: "مَاذَا يَعْنِي مَفْهُومُ (التَّصْدِيقِ) فِي عِلْمِ الْمَنْطِقِ؟",
+                questionMs: "Apakah yang dimaksudkan dengan konsep 'Tasdiq' (التَّصْدِيق) dalam Mantiq?",
+                options: [
+                    { ar: "الإِقْرَارُ بِنِسْبَةِ أَمْرٍ إِلَى أَمْرٍ آخَرَ نَفْيًا أَوْ إِثْبَاتًا كَقَوْلِنَا (حَمْزَةُ نَاجِحٌ)", ms: "Mengakui nisbah sesuatu kepada sesuatu secara positif/negatif seperti 'Hamzah Berjaya'" },
+                    { ar: "تَمَثُّلُ صُورَةِ الشَّيْءِ فِي الذِّهْنِ دُونَ حُكْمٍ", ms: "Gambaran sesuatu di mindا tanpa hukum" },
+                    { ar: "القَوَاعِدُ الصَّرْفِيَّةُ لِتَصْرِيفِ الأَفْعَالِ", ms: "Kaedah saraf untuk tasrif kata kerja" },
+                    { ar: "تَفْسِيرُ الأَيَاتِ القُرْآنِيَّةِ", ms: "Tafsir ayat-ayat Al-Quran" }
+                ],
+                correct: 0,
+                itemIcon: "🍓",
+                itemName: "ثمرة التوت البري"
+            }
+        ];
+
+        // --- GAME STATE ---
+        let state = {
+            nickname: "",
+            score: 0,
+            answeredIds: new Set(),
+            currentActiveQuestion: null
+        };
+
+        // Initialize Game
+        function startGame(e) {
+            e.preventDefault();
+            const nickInput = document.getElementById('nickname').value.trim();
+            if (!nickInput) return;
+
+            state.nickname = nickInput;
+            state.score = 0;
+            state.answeredIds.clear();
+
+            document.getElementById('display-player').innerText = `اللاعب: ${state.nickname}`;
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            renderFullGardenMap();
+            updateHeaderStats();
+        }
+
+        // Render Single Garden Map with all 15 hidden items
+        function renderFullGardenMap() {
+            const grid = document.getElementById('garden-map-grid');
+            grid.innerHTML = '';
+
+            questionsData.forEach((qItem) => {
+                const isFound = state.answeredIds.has(qItem.id);
+
+                const btn = document.createElement('button');
+                btn.id = `garden-item-${qItem.id}`;
+                
+                let baseClasses = "bg-emerald-950/85 border-2 border-emerald-500/70 rounded-2xl p-3 md:p-4 flex flex-col items-center justify-center transition duration-300 shadow-xl group cursor-pointer ";
+                if (isFound) {
+                    btn.className = baseClasses + "item-found border-emerald-900";
+                } else {
+                    btn.className = baseClasses + "hover:bg-emerald-800 hover:border-emerald-300 hover:scale-105 active:scale-95 animate-item";
+                }
+
+                btn.innerHTML = `
+                    <span class="text-4xl md:text-5xl mb-1.5 transition transform group-hover:scale-110">${qItem.itemIcon}</span>
+                    <span class="text-xs md:text-sm font-bold text-emerald-100 arabic-font tracking-wide">${qItem.itemName}</span>
+                    <span class="text-[10px] text-emerald-300 malay-subtext mt-0.5">${isFound ? '✅ (تم الحل)' : '🔍 انقر للفتح'}</span>
+                `;
+
+                btn.onclick = () => {
+                    if (state.answeredIds.has(qItem.id)) return;
+                    openQuestionModal(qItem);
+                };
+
+                grid.appendChild(btn);
+            });
+        }
+
+        function openQuestionModal(qObj) {
+            state.currentActiveQuestion = qObj;
+
+            const modal = document.getElementById('question-modal');
+            const modDiff = document.getElementById('modal-difficulty');
+            const modIcon = document.getElementById('modal-item-icon');
+            const modTitle = document.getElementById('modal-item-title');
+            const modText = document.getElementById('modal-question-text');
+            const modMs = document.getElementById('modal-question-ms');
+            const modOptions = document.getElementById('modal-options-container');
+            const feedback = document.getElementById('modal-feedback');
+            const nextBtn = document.getElementById('next-btn');
+
+            modDiff.innerText = `العرَس: ${qObj.level} (+${qObj.points} نقاط)`;
+            modIcon.innerText = qObj.itemIcon;
+            modTitle.innerText = qObj.itemName;
+            modText.innerText = qObj.question;
+            modMs.innerText = `🇲🇾 Terjemahan: ${qObj.questionMs}`;
+            modOptions.innerHTML = '';
+            feedback.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+
+            // Randomize options display order
+            let shuffledIndices = [0, 1, 2, 3].sort(() => 0.5 - Math.random());
+
+            shuffledIndices.forEach(idx => {
+                const opt = qObj.options[idx];
+                const optBtn = document.createElement('button');
+                optBtn.className = "w-full text-right p-3.5 md:p-4 rounded-2xl bg-emerald-900/90 hover:bg-emerald-800 border-2 border-emerald-700/80 text-white transition flex flex-col gap-1 shadow-md";
+                optBtn.innerHTML = `
+                    <span class="text-lg md:text-xl font-bold arabic-font leading-relaxed">${opt.ar}</span>
+                    <span class="text-xs md:text-sm text-emerald-300 malay-subtext">🇲🇾 ${opt.ms}</span>
+                `;
+                optBtn.onclick = () => checkAnswer(idx, qObj.correct, qObj.points, optBtn, modOptions);
+                modOptions.appendChild(optBtn);
+            });
+
+            modal.classList.remove('hidden');
+        }
+
+        function checkAnswer(selectedIdx, correctIdx, points, btnElement, optionsContainer) {
+            const allBtns = optionsContainer.getElementsByTagName('button');
+            const feedback = document.getElementById('modal-feedback');
+            const nextBtn = document.getElementById('next-btn');
+
+            for (let b of allBtns) {
+                b.disabled = true;
+            }
+
+            feedback.classList.remove('hidden');
+
+            const currentQ = state.currentActiveQuestion;
+
+            if (selectedIdx === correctIdx) {
+                btnElement.classList.remove('bg-emerald-900/90', 'border-emerald-700/80');
+                btnElement.classList.add('bg-green-800', 'border-green-400');
+                feedback.className = "p-3 rounded-xl text-center font-bold text-sm mb-4 bg-green-950 text-green-200 border border-green-600 malay-subtext";
+                feedback.innerText = `✨ أَحْسَنْتَ! إِجَابَةٌ صَحِيحَةٌ (+ ${points} نقاط) | Tahniah! Jawapan anda betul.`;
+                state.score += points;
+            } else {
+                btnElement.classList.remove('bg-emerald-900/90', 'border-emerald-700/80');
+                btnElement.classList.add('bg-red-900', 'border-red-500');
+
+                // Highlight correct answer in green
+                for (let b of allBtns) {
+                    if (b.innerHTML.includes(currentQ.options[correctIdx].ar)) {
+                        b.classList.remove('bg-emerald-900/90', 'border-emerald-700/80');
+                        b.classList.add('bg-green-800', 'border-green-400');
+                    }
+                }
+
+                feedback.className = "p-3 rounded-xl text-center font-bold text-sm mb-4 bg-red-950 text-red-200 border border-red-600 malay-subtext";
+                feedback.innerText = "❌ إِجَابَةٌ خَاطِئَةٌ. الإجابة الصحيحة موضحة باللون الأخضر. | Jawapan kurang tepat.";
+            }
+
+            state.answeredIds.add(currentQ.id);
+            nextBtn.classList.remove('hidden');
+            updateHeaderStats();
+        }
+
+        function confirmQuestionDone() {
+            closeModal();
+            renderFullGardenMap();
+
+            // Check if all 15 questions are answered
+            if (state.answeredIds.size >= questionsData.length) {
+                setTimeout(endGame, 400);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('question-modal').classList.add('hidden');
+        }
+
+        function updateHeaderStats() {
+            document.getElementById('progress-count').innerText = state.answeredIds.size;
+            document.getElementById('current-score').innerText = state.score;
+        }
+
+        function endGame() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+
+            document.getElementById('res-player').innerText = state.nickname;
+            document.getElementById('res-score').innerText = state.score;
+            
+            // Maximum Score = 3*1 + 5*2 + 7*3 = 34 points
+            let maxScore = 34;
+            let percentage = Math.round((state.score / maxScore) * 100);
+            document.getElementById('res-percentage').innerText = percentage + "%";
+        }
+
+        function restartGame() {
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('nickname').value = '';
+        }
+    </script>
+</body>
+</html>

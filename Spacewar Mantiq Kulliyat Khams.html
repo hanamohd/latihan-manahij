@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>معركة الفضاء: علم المنطق - الكليات الخمس والتعريفات</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KFGQPC & Amiri Arabic Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;800&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'KFGQPC Uthman Taha Naskh';
+            src: url('https://cdn.jsdelivr.net/gh/mizanx/arabic-fonts@main/fonts/KFGQPCUthmanTahaNaskh-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        body {
+            font-family: 'KFGQPC Uthman Taha Naskh', 'Amiri', 'Scheherazade New', serif;
+            background-color: #030712;
+            color: #f3f4f6;
+            overflow-x: hidden;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .kfgqpc-font {
+            font-family: 'KFGQPC Uthman Taha Naskh', 'Amiri', serif;
+        }
+
+        .subtext-font {
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* Canvas styling optimized for touch drag & tap */
+        #gameCanvas {
+            background: radial-gradient(circle at center, #0b0f19 0%, #030712 100%);
+            border: 2px solid #1e293b;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.2);
+            touch-action: none;
+            cursor: pointer;
+        }
+
+        /* Glowing text effects */
+        .glow-title {
+            text-shadow: 0 0 15px rgba(59, 130, 246, 0.6), 0 0 30px rgba(147, 51, 234, 0.4);
+        }
+        
+        .glow-box {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Touch control buttons */
+        .control-btn {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(100, 116, 139, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        .control-btn:active {
+            background: rgba(59, 130, 246, 0.6);
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen p-2 md:p-4">
+
+    <header class="w-full max-w-4xl text-center my-2">
+        <h1 class="text-3xl md:text-5xl font-bold kfgqpc-font text-cyan-300 glow-title leading-relaxed">
+            🚀 حَرْبُ الْفَضَاءِ: عِلْمُ الْمَنْطِقِ (الْكُلِّيَّاتُ الْخَمْسُ وَالتَّعْرِيفَاتُ)
+        </h1>
+        <p class="text-xs md:text-sm subtext-font text-slate-400 mt-1">
+            Latihan Mantiq Spacewar: Sentuh atau seret kapal (Touch & Drag) untuk tembak jawapan betul!
+        </p>
+    </header>
+
+    <main class="w-full max-w-4xl flex-grow flex flex-col items-center justify-center my-2 relative">
+
+        <!-- START SCREEN -->
+        <div id="start-screen" class="w-full max-w-lg bg-slate-900/90 border-2 border-cyan-500/50 rounded-3xl p-6 md:p-8 text-center shadow-2xl backdrop-blur-lg z-20">
+            <div class="mb-6">
+                <span class="text-6xl inline-block mb-3 animate-bounce">🛸</span>
+                <h2 class="text-2xl md:text-3xl font-bold text-cyan-200 kfgqpc-font">اسْتِعْدَادٌ لِلْمَعْرَكَةِ (Sedia Bermain)</h2>
+                <p class="text-xs md:text-sm text-slate-300 subtext-font mt-2 leading-relaxed">
+                    Uji kefahaman الكليات الخمس (Jins, Nau', Fasl, Khassah, Aradh Am) dan Jenis Definisi (حد تام / حد ناقص / رسم تام / رسم ناقص).
+                </p>
+            </div>
+
+            <form onsubmit="startGame(event)" class="space-y-4">
+                <div>
+                    <label class="block text-right text-xs text-cyan-400 subtext-font mb-1">اسم المحارب (Nama Pemain):</label>
+                    <input type="text" id="player-name" required placeholder="اكتب اسمك هنا..." 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-950 border-2 border-cyan-600 text-cyan-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400 text-center text-xl font-bold kfgqpc-font">
+                </div>
+
+                <div class="p-3 bg-slate-800/80 rounded-xl text-xs text-slate-300 subtext-font text-right space-y-1">
+                    <p class="font-bold text-cyan-300">🎮 Kawalan Skrin & Telefon (Controls):</p>
+                    <p>• <b>Skrin Sentuh (Mobile):</b> Seret jari/sentuh terus pada skrin untuk gerak & tembak automatik ke sasaran!</p>
+                    <p>• <b>Komputer:</b> Kekunci ⬅️ ➡️ & <b>SPACEBAR</b> untuk tembak.</p>
+                </div>
+
+                <button type="submit" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95 text-xl kfgqpc-font">
+                    انْطَلِقْ فِي الْمَهَمَّةِ 🚀 (Mula Main)
+                </button>
+            </form>
+        </div>
+
+        <!-- PLAY CANVAS SCREEN -->
+        <div id="game-screen" class="hidden w-full flex flex-col items-center relative">
+            
+            <!-- Dashboard Stats HUD -->
+            <div class="w-full bg-slate-900/90 border border-cyan-800 rounded-2xl p-3 mb-2 flex flex-wrap justify-between items-center text-xs md:text-sm subtext-font text-cyan-100 gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="bg-cyan-950 border border-cyan-700 px-3 py-1 rounded-lg font-bold" id="hud-player">
+                        المحارب: -
+                    </span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="bg-indigo-950 border border-indigo-700 px-3 py-1 rounded-lg">
+                        الرقم: <strong id="hud-qnum" class="text-yellow-300 text-base">1</strong> / 20
+                    </span>
+                    <span class="bg-emerald-950 border border-emerald-700 px-3 py-1 rounded-lg">
+                        النقاط: <strong id="hud-score" class="text-emerald-400 text-base">0</strong>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Question Display Box -->
+            <div class="w-full bg-slate-900/90 border-2 border-cyan-500/70 rounded-2xl p-4 text-center mb-2 shadow-xl glow-box">
+                <div class="flex justify-between items-center mb-1">
+                    <span id="question-level" class="px-2.5 py-0.5 rounded text-[10px] md:text-xs font-bold subtext-font bg-cyan-900 text-cyan-200 border border-cyan-600">
+                        مستوى
+                    </span>
+                    <span id="question-topic" class="text-[11px] text-cyan-400 font-bold subtext-font">
+                        علم المنطق
+                    </span>
+                </div>
+                <h3 id="question-ar" class="text-lg md:text-2xl font-bold text-white kfgqpc-font leading-relaxed">
+                    جاري تحميل السؤال...
+                </h3>
+                <p id="question-ms" class="text-xs md:text-sm text-cyan-300 subtext-font mt-1">
+                    Loading question...
+                </p>
+            </div>
+
+            <!-- Game Canvas Container -->
+            <div class="relative w-full max-w-4xl flex justify-center items-center">
+                <canvas id="gameCanvas" width="800" height="420" class="w-full rounded-2xl"></canvas>
+            </div>
+
+            <!-- Touch Controls & Quick Fire Assistant (Mobile Friendly) -->
+            <div class="w-full max-w-md grid grid-cols-3 gap-3 mt-3">
+                <button id="btn-left" class="control-btn p-3 rounded-2xl text-xl font-bold text-cyan-300 active:bg-cyan-600/50">
+                    ⬅️ Kiri
+                </button>
+                <button id="btn-fire" class="control-btn p-3 rounded-2xl text-xl font-bold text-red-400 active:bg-red-600/50">
+                    🔥 Tembak
+                </button>
+                <button id="btn-right" class="control-btn p-3 rounded-2xl text-xl font-bold text-cyan-300 active:bg-cyan-600/50">
+                    Kanan ➡️
+                </button>
+            </div>
+            <p class="text-[11px] text-slate-400 subtext-font mt-1 text-center">
+                💡 Tip Telefon: Anda juga boleh sentuh dan seret (drag) kapal terbang secara terus pada skrin!
+            </p>
+        </div>
+
+        <!-- RESULTS / SUMMARY SCREEN -->
+        <div id="result-screen" class="hidden w-full max-w-lg bg-slate-900/95 border-2 border-cyan-500 rounded-3xl p-6 md:p-8 text-center shadow-2xl z-20">
+            <span class="text-7xl block mb-2">🌟🏆</span>
+            <h2 class="text-2xl md:text-3xl font-bold text-cyan-100 kfgqpc-font">انْتَهَتِ الْمَعْرَكَةُ بِنَجَاحٍ!</h2>
+            <p class="text-slate-300 subtext-font mt-2 text-sm">
+                Tahniah <span id="res-name" class="font-bold text-cyan-300"></span>, anda telah menyempurnakan 20 latihan Mantiq!
+            </p>
+
+            <div class="my-6 bg-slate-950 border border-slate-800 p-4 rounded-2xl flex justify-around items-center">
+                <div>
+                    <span class="text-xs text-slate-400 subtext-font block">المجموع النهائي (Markah)</span>
+                    <span id="res-score" class="text-3xl font-bold text-yellow-400 kfgqpc-font">0</span> <span class="text-slate-400 text-xs subtext-font">/ 46</span>
+                </div>
+                <div class="w-px h-10 bg-slate-800"></div>
+                <div>
+                    <span class="text-xs text-slate-400 subtext-font block">النسبة المئوية (Peratus)</span>
+                    <span id="res-percent" class="text-3xl font-bold text-emerald-400 kfgqpc-font">0%</span>
+                </div>
+            </div>
+
+            <button onclick="restartGame()" class="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold rounded-xl shadow-lg transition subtext-font text-lg">
+                🔄 Main Semula (إعادة اللعبة)
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-4xl text-center py-2 text-[11px] text-slate-500 subtext-font">
+        مبني استناداً إلى كتاب الكليات الخمس (معهد بونتيان - سامجان أحمد) | خط KFGQPC Uthman Taha Naskh
+    </footer>
+
+    <script>
+        const questionsPool = [
+            // --- ARAS RENDAH (20% = 4 Questions) ---
+            {
+                id: 1,
+                level: "سهل (Rendah)",
+                points: 1,
+                qAr: "كَمْ عَدَدُ الْكُلِّيَّاتِ الْخَمْسِ فِي عِلْمِ الْمَنْطِقِ؟",
+                qMs: "Berapakah bilangan الكليات الخمس (Kulli yang lima) dalam Mantiq?",
+                options: [
+                    { ar: "خَمْسَةٌ (5)", isCorrect: true },
+                    { ar: "أَرْبَعَةٌ (4)", isCorrect: false },
+                    { ar: "ثَلَاثَةٌ (3)", isCorrect: false }
+                ]
+            },
+            {
+                id: 2,
+                level: "سهل (Rendah)",
+                points: 1,
+                qAr: "مَا هُوَ الْكُلِّيُّ الَّذِي هُوَ (تَمَامُ الْمَاهِيَةِ) كَالْفَرَسِ وَالإِنْسَانِ؟",
+                qMs: "Apakah Kulli yang merupakan Tamam Mahiah (keseluruhan hakikat) seperti Kuda dan Manusia?",
+                options: [
+                    { ar: "النَّوْعُ (Nau')", isCorrect: true },
+                    { ar: "الْجِنْسُ (Jins)", isCorrect: false },
+                    { ar: "الْفَصْلُ (Fasl)", isCorrect: false }
+                ]
+            },
+            {
+                id: 3,
+                level: "سهل (Rendah)",
+                points: 1,
+                qAr: "مَا هُوَ الْكُلِّيُّ الَّذِي يُمَثِّلُ جُزْءَ الْمَاهِيَةِ الأَعَمَّ مِثْلُ (حَيَوَان)؟",
+                qMs: "Apakah Kulli yang mewakili bahagian hakikat yang lebih umum seperti 'Hayawan' (Haiwan)?",
+                options: [
+                    { ar: "الْجِنْسُ (Jins)", isCorrect: true },
+                    { ar: "الْخَاصَّةُ (Khassah)", isCorrect: false },
+                    { ar: "الْعَرَضُ الْعَامُّ (Aradh Am)", isCorrect: false }
+                ]
+            },
+            {
+                id: 4,
+                level: "سهل (Rendah)",
+                points: 1,
+                qAr: "أَيُّ كُلِّيٍّ خَارِجٌ عَنِ الْمَاهِيَةِ وَخَاصٌّ بِهَا مِثْلُ (الضَّاحِكِ) لِلإِنْسَانِ؟",
+                qMs: "Manakah Kulli sifat luar yang khusus bagi sesuatu hakikat seperti 'Ketawa' bagi manusia?",
+                options: [
+                    { ar: "الْخَاصَّةُ (Khassah)", isCorrect: true },
+                    { ar: "الْعَرَضُ الْعَامُّ (Aradh Am)", isCorrect: false },
+                    { ar: "الْجِنْسُ (Jins)", isCorrect: false }
+                ]
+            },
+
+            // --- ARAS SEDERHANA (30% = 6 Questions) ---
+            {
+                id: 5,
+                level: "متوسط (Sederhana)",
+                points: 2,
+                qAr: "مَا هُوَ الْكُلِّيُّ الَّذِي يُمَيِّزُ الشَّيْءَ عَنْ غَيْرِهِ فِي ذَاتِهِ كَـ (نَاطِق) لِلإِنْسَانِ؟",
+                qMs: "Apakah Kulli yang membezakan sesuatu daripada yang lain dalam zatnya seperti 'Natiq' (Berfikir)?",
+                options: [
+                    { ar: "الْفَصْلُ (Fasl)", isCorrect: true },
+                    { ar: "الْجِنْسُ (Jins)", isCorrect: false },
+                    { ar: "النَّوْعُ (Nau')", isCorrect: false }
+                ]
+            },
+            {
+                id: 6,
+                level: "متوسط (Sederhana)",
+                points: 2,
+                qAr: "مَا هُوَ الْجِنْسُ الَّذِي لَا جِنْسَ تَحْتَهُ وَفَوْقَهُ أَجْنَاسٌ مِثْلُ (حَيَوَان)؟",
+                qMs: "Apakah jenis Jins yang tiada Jins di bawahnya dan di atasnya ada Jins lain, seperti 'Hayawan'?",
+                options: [
+                    { ar: "الْجِنْسُ الْقَرِيبُ (Jins Qarib)", isCorrect: true },
+                    { ar: "الْجِنْسُ الْبَعِيدُ (Jins Ba'id)", isCorrect: false },
+                    { ar: "الْجِنْسُ الْوَسِيطُ (Jins Wasit)", isCorrect: false }
+                ]
+            },
+            {
+                id: 7,
+                level: "متوسط (Sederhana)",
+                points: 2,
+                qAr: "مَا هُوَ الْجِنْسُ الَّذِي لَا جِنْسَ فَوْقَهُ مِثْلُ (الْجَوْهَرِ)؟",
+                qMs: "Apakah jenis Jins paling tinggi yang tiada Jins di atasnya seperti 'Jauhar'?",
+                options: [
+                    { ar: "الْجِنْسُ الْبَعِيدُ (Jins Ba'id)", isCorrect: true },
+                    { ar: "الْجِنْسُ الْقَرِيبُ (Jins Qarib)", isCorrect: false },
+                    { ar: "الْجِنْسُ الْوَسِيطُ (Jins Wasit)", isCorrect: false }
+                ]
+            },
+            {
+                id: 8,
+                level: "متوسط (Sederhana)",
+                points: 2,
+                qAr: "صِفَةُ (الْمَاشِي) بِالنِّسْبَةِ لِلإِنْسَانِ وَالْجَمَلِ تُسَمَّى:",
+                qMs: "Sifat 'Berjalan' bagi manusia dan unta dinamakan sebagai:",
+                options: [
+                    { ar: "عَرَضًا عَامًّا (Aradh Am)", isCorrect: true },
+                    { ar: "خَاصَّةً (Khassah)", isCorrect: false },
+                    { ar: "فَصْلًا قَرِيبًا (Fasl Qarib)", isCorrect: false }
+                ]
+            },
+            {
+                id: 9,
+                level: "متوسط (Sederhana)",
+                points: 2,
+                qAr: "الْفَصْلُ الَّذِي يُمَيِّزُ الشَّيْءَ عَنْ جِنْسِهِ الْقَرِيبِ كَـ (نَاطِق) يُسَمَّى:",
+                qMs: "Fasl yang membezakan sesuatu daripada Jins Qaribnya seperti 'Natiq' dinamakan:",
+                options: [
+                    { ar: "فَصْلًا قَرِيبًا (Fasl Qarib)", isCorrect: true },
+                    { ar: "فَصْلًا بَعِيدًا (Fasl Ba'id)", isCorrect: false },
+                    { ar: "جِنْسًا قَرِيبًا (Jins Qarib)", isCorrect: false }
+                ]
+            },
+            {
+                id: 10,
+                level: "متوسط (Sederhana)",
+                points: 2,
+                qAr: "النَّوْعُ الَّذِي يَنْدَرِجُ تَحْتَ جِنْسٍ كَـ (حَيَوَان) تَحْتَ (نَامٍ) يُسَمَّى:",
+                qMs: "Nau' yang termasuk di bawah sesuatu Jins seperti 'Hayawan' di bawah 'Namin' dinamakan:",
+                options: [
+                    { ar: "نَوْعًا إِضَافِيًّا (Nau' Idhofi)", isCorrect: true },
+                    { ar: "نَوْعًا حَقِيقِيًّا (Nau' Hakiki)", isCorrect: false },
+                    { ar: "نَوْعًا بَسِيطًا (Nau' Basit)", isCorrect: false }
+                ]
+            },
+
+            // --- ARAS TINGGI (50% = 10 Questions, INCLUDING 5 DEFINITION QUESTIONS FOR HAD/RASM) ---
+            {
+                id: 11,
+                level: "عالي (Tinggi)",
+                points: 3,
+                qAr: "تَعْرِيفُ الإِنْسَانِ بـِ (حَيَوَانٌ نَاطِقٌ) [جِنْسٌ قَرِيبٌ + فَصْلٌ قَرِيبٌ] هُوَ تَعْرِيفٌ بـِ:",
+                qMs: "Definisi Manusia dengan 'Hayawan Natiq' [Jins Qarib + Fasl Qarib] merupakan definisi jenis:",
+                options: [
+                    { ar: "حَدٍّ تَامٍّ (Had Tam)", isCorrect: true },
+                    { ar: "حَدٍّ نَاقِصٍ (Had Naqis)", isCorrect: false },
+                    { ar: "رَسْمٍ تَامٍّ (Rasm Tam)", isCorrect: false }
+                ]
+            },
+            {
+                id: 12,
+                level: "عالي (Tinggi)",
+                points: 3,
+                qAr: "تَعْرِيفُ الإِنْسَانِ بـِ (جِسْمٌ نَاطِقٌ) أَوْ (نَاطِقٌ فَقَطْ) [جِنْسٌ بَعِيدٌ + فَصْلٌ قَرِيبٌ] هُوَ:",
+                qMs: "Definisi Manusia dengan 'Jism Natiq' atau 'Natiq sahaja' [Jins Ba'id + Fasl Qarib] merupakan jenis:",
+                options: [
+                    { ar: "حَدٍّ نَاقِصٍ (Had Naqis)", isCorrect: true },
+                    { ar: "حَدٍّ تَامٍّ (Had Tam)", isCorrect: false },
+                    { ar: "رَسْمٍ نَاقِصٍ (Rasm Naqis)", isCorrect: false }
+                ]
+            },
+            {
+                id: 13,
+                level: "عالي (Tinggi)",
+                points: 3,
+                qAr: "تَعْرِيفُ الإِنْسَانِ بـِ (حَيَوَانٌ ضَاحِكٌ) [جِنْسٌ قَرِيبٌ + خَاصَّةٌ] هُوَ تَعْرِيفٌ بـِ:",
+                qMs: "Definisi Manusia dengan 'Hayawan Dahik' (Haiwan yang Ketawa) [Jins Qarib + Khassah] ialah:",
+                options: [
+                    { ar: "رَسْمٍ تَامٍّ (Rasm Tam)", isCorrect: true },
+                    { ar: "رَسْمٍ نَاقِصٍ (Rasm Naqis)", isCorrect: false },
+                    { ar: "حَدٍّ تَامٍّ (Had Tam)", isCorrect: false }
+                ]
+            },
+            {
+                id: 14,
+                level: "عالي (Tinggi)",
+                points: 3,
+                qAr: "تَعْرِيفُ الإِنْسَانِ بـِ (جِسْمٌ ضَاحِكٌ) أَوْ (ضَاحِكٌ فَقَطْ) [جِنْسٌ بَعِيدٌ + خَاصَّةٌ] هُوَ:",
+                qMs: "Definisi Manusia dengan 'Jism Dahik' atau 'Dahik sahaja' [Jins Ba'id + Khassah] ialah:",
+                options: [
+                    { ar: "رَسْمٍ نَاقِصٍ (Rasm Naqis)", isCorrect: true },
+                    { ar: "رَسْمٍ تَامٍّ (Rasm Tam)", isCorrect: false },
+                    { ar: "حَدٍّ نَاقِصٍ (Had Naqis)", isCorrect: false }
+                ]
+            },
+            {
+                id: 15,
+                level: "عالي (Tinggi)",
+                points: 3,
+                qAr: "إِذَا عَرَّفْنَا الْفَرَسَ بِـ (حَيَوَانٌ صَاهِلٌ)، فَمَا نَوْعُ هَذَا التَّعْرِيفِ؟",
+                qMs: "Jika kita mendefinisikan Kuda dengan 'Hayawan Sohel' (Haiwan meringkik), apakah jenis definisi ini?",
+                options: [
+                    { ar: "حَدٌّ تَامٌّ (Had Tam)", isCorrect: true },
+                    { ar: "رَسْمٌ تَامٌّ (Rasm Tam)", isCorrect: false },
+                    { ar: "حَدٌّ نَاقِصٌ (Had Naqis)", isCorrect: false }
+                ]
+            },
+            {
+                id: 16,
+                level: "عالي (Tinggi)",
+                points: 3,
+                qAr: "مَا هِيَ الصِّيغَةُ الَّتِي تُسْتَخْدَمُ لِلسُّؤَالِ عَنِ الْجِنْسِ فِي الْمَنْطِقِ؟",
+                qMs: "Apakah bentuk soalan yang digunakan untuk bertanyakan tentang Jins dalam Mantiq?",
+                options: [
+                    { ar: "مَا هُوَ؟ (Apa dia?)", isCorrect: true },
+                    { ar: "أَيُّ شَيْءٍ هُوَ فِي ذَاتِهِ؟ (Sifat zatnya?)", isCorrect: false },
+                    { ar: "أَيُّ شَيْءٍ هُوَ فِي عَرَضِهِ؟ (Sifat luarnya?)", isCorrect: false }
+                ]
+            },
+            {
+                id: 17,
+                level: "عالي (Tinggi)",
+                points: 3,
+                qAr: "مَا هِيَ الصِّيغَةُ الَّتِي تُسْتَخْدَمُ لِلسُّؤَالِ عَنِ الْفَصْلِ فِي الْمَنْطِقِ؟",
+                qMs: "Apakah bentuk soalan yang digunakan untuk bertanyakan tentang Fasl dalam Mantiq?",
+                options: [
+                    { ar: "أَيُّ شَيْءٍ هُوَ فِي ذَاتِهِ؟ (Sifat zatnya?)", isCorrect: true },
+                    { ar: "مَا هُوَ؟ (Apa dia?)", isCorrect: false },
+                    { ar: "أَيُّ شَيْءٍ هُوَ فِي عَرَضِهِ؟ (Sifat luarnya?)", isCorrect: false }
+                ]
+            },
+            {
+                id: 18,
+                level: "عالي (Tinggi)",
+                points: 3,
+                qAr: "الْمِثَالُ عَلَى النَّوْعِ الْحَقِيقِيِّ الْبَسِيطِ الَّذِي لَا يَنْدَرِجُ تَحْتَ جِنْسٍ هُوَ:",
+                qMs: "Contoh bagi Nau' Hakiki Basit yang tidak terangkum di bawah sebarang Jins ialah:",
+                options: [
+                    { ar: "النُّقْطَةُ (Titik)", isCorrect: true },
+                    { ar: "الإِنْسَانُ (Manusia)", isCorrect: false },
+                    { ar: "الْفَرَسُ (Kuda)", isCorrect: false }
+                ]
+            },
+            {
+                id: 19,
+                level: "عالي (Tinggi)",
+                points: 3,
+                qAr: "عِنْدَ الإِمَامِ الْغَزَالِيِّ، كُلُّ خَاصَّةٍ لِلنَّوْعِ تَكُونُ أَيْضًا:",
+                qMs: "Menurut kaedah Mantiq, setiap Khassah bagi sesuatu Nau' adalah juga:",
+                options: [
+                    { ar: "خَاصَّةً لِجِنْسِهِ (Khassah bagi Jinsnya)", isCorrect: true },
+                    { ar: "فَصْلًا لِجِنْسِهِ (Fasl bagi Jinsnya)", isCorrect: false },
+                    { ar: "عَرَضًا عَامًّا لِنَوْعِهِ (Aradh Am bagi Nau'nya)", isCorrect: false }
+                ]
+            },
+            {
+                id: 20,
+                level: "عالي (Tinggi)",
+                points: 3,
+                qAr: "الزَّوْجِيَّةُ لِلأَرْبَعَةِ تُعْتَبَرُ مِثَالًا عَلَى الْخَاصَّةِ أَوْ الْعَرَضِ الَّذِي هُوَ:",
+                qMs: "Sifat 'Genap' bagi nombor empat merupakan contoh bagi Khassah atau Aradh yang berbentuk:",
+                options: [
+                    { ar: "لاَزِمٌ لاَ يَنْفَكُّ (Pasti/Tidak berpisah)", isCorrect: true },
+                    { ar: "مُفَارِقٌ يَجُوزُ انْفِكَاكُهُ (Boleh berpisah)", isCorrect: false },
+                    { ar: "جِنْسٌ بَعِيدٌ (Jins Ba'id)", isCorrect: false }
+                ]
+            }
+        ];
+
+        let gameState = {
+            playerName: "",
+            score: 0,
+            currentQIndex: 0,
+            bullets: [],
+            targets: [],
+            playerX: 370,
+            playerY: 360,
+            playerSpeed: 7,
+            keys: {},
+            gameLoopId: null,
+            isAnswerWaiting: false,
+            isDragging: false
+        };
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function initControls() {
+            // Keyboard Controls
+            window.addEventListener('keydown', e => {
+                gameState.keys[e.key] = true;
+                if (e.key === ' ' || e.code === 'Space') {
+                    e.preventDefault();
+                    fireBullet();
+                }
+            });
+
+            window.addEventListener('keyup', e => {
+                gameState.keys[e.key] = false;
+            });
+
+            // On-screen Button Controls
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+            const btnFire = document.getElementById('btn-fire');
+
+            btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); gameState.keys['ArrowLeft'] = true; });
+            btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); gameState.keys['ArrowLeft'] = false; });
+            btnLeft.addEventListener('mousedown', () => { gameState.keys['ArrowLeft'] = true; });
+            btnLeft.addEventListener('mouseup', () => { gameState.keys['ArrowLeft'] = false; });
+
+            btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); gameState.keys['ArrowRight'] = true; });
+            btnRight.addEventListener('touchend', (e) => { e.preventDefault(); gameState.keys['ArrowRight'] = false; });
+            btnRight.addEventListener('mousedown', () => { gameState.keys['ArrowRight'] = true; });
+            btnRight.addEventListener('mouseup', () => { gameState.keys['ArrowRight'] = false; });
+
+            btnFire.addEventListener('touchstart', (e) => { e.preventDefault(); fireBullet(); });
+            btnFire.addEventListener('click', () => { fireBullet(); });
+
+            canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+        }
+
+        function getCanvasCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            // Scale according to canvas actual internal resolution width (800) vs display width
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            gameState.isDragging = true;
+            const coords = getCanvasCoordinates(e);
+            gameState.playerX = coords.x - 25; // Center ship on finger
+            // Auto fire when touching canvas
+            fireBullet();
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!gameState.isDragging) return;
+            const coords = getCanvasCoordinates(e);
+            gameState.playerX = coords.x - 25;
+            
+            // Boundary limits
+            if (gameState.playerX < 10) gameState.playerX = 10;
+            if (gameState.playerX > canvas.width - 60) gameState.playerX = canvas.width - 60;
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            gameState.isDragging = false;
+        }
+
+        function handleMouseDown(e) {
+            gameState.isDragging = true;
+            const coords = getCanvasCoordinates(e);
+            gameState.playerX = coords.x - 25;
+            fireBullet();
+        }
+
+        function handleMouseMove(e) {
+            if (!gameState.isDragging) return;
+            const coords = getCanvasCoordinates(e);
+            gameState.playerX = coords.x - 25;
+            if (gameState.playerX < 10) gameState.playerX = 10;
+            if (gameState.playerX > canvas.width - 60) gameState.playerX = canvas.width - 60;
+        }
+
+        function handleMouseUp(e) {
+            gameState.isDragging = false;
+        }
+
+        function startGame(e) {
+            e.preventDefault();
+            const name = document.getElementById('player-name').value.trim();
+            if (!name) return;
+
+            gameState.playerName = name;
+            gameState.score = 0;
+            gameState.currentQIndex = 0;
+            gameState.isAnswerWaiting = false;
+
+            document.getElementById('hud-player').innerText = `المحارب: ${gameState.playerName}`;
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            initControls();
+            loadQuestion(0);
+            
+            if (gameState.gameLoopId) cancelAnimationFrame(gameState.gameLoopId);
+            gameLoop();
+        }
+
+        function loadQuestion(index) {
+            if (index >= questionsPool.length) {
+                endGame();
+                return;
+            }
+
+            const q = questionsPool[index];
+            document.getElementById('hud-qnum').innerText = index + 1;
+            document.getElementById('hud-score').innerText = gameState.score;
+            document.getElementById('question-level').innerText = `مستوى: ${q.level} (+${q.points} نقاط)`;
+            document.getElementById('question-ar').innerText = q.qAr;
+            document.getElementById('question-ms').innerText = `🇲🇾 ${q.qMs}`;
+
+            // Create target answer asteroids/ships
+            gameState.targets = [];
+            gameState.bullets = [];
+            gameState.isAnswerWaiting = false;
+
+            const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+            const positions = [130, 400, 670];
+
+            shuffledOptions.forEach((opt, i) => {
+                gameState.targets.push({
+                    x: positions[i],
+                    y: 70,
+                    width: 190,
+                    height: 55,
+                    textAr: opt.ar,
+                    isCorrect: opt.isCorrect,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    hit: false
+                });
+            });
+        }
+
+        function fireBullet() {
+            if (gameState.isAnswerWaiting) return;
+            gameState.bullets.push({
+                x: gameState.playerX + 25,
+                y: gameState.playerY,
+                radius: 4,
+                speed: 9
+            });
+        }
+
+        function updateGame() {
+            if (gameState.keys['ArrowLeft'] || gameState.keys['a']) {
+                gameState.playerX -= gameState.playerSpeed;
+            }
+            if (gameState.keys['ArrowRight'] || gameState.keys['d']) {
+                gameState.playerX += gameState.playerSpeed;
+            }
+
+            if (gameState.playerX < 10) gameState.playerX = 10;
+            if (gameState.playerX > canvas.width - 60) gameState.playerX = canvas.width - 60;
+
+            for (let i = gameState.bullets.length - 1; i >= 0; i--) {
+                const b = gameState.bullets[i];
+                b.y -= b.speed;
+
+                if (b.y < 0) {
+                    gameState.bullets.splice(i, 1);
+                    continue;
+                }
+
+                for (let j = 0; j < gameState.targets.length; j++) {
+                    const t = gameState.targets[j];
+                    if (!t.hit && b.x > t.x - t.width/2 && b.x < t.x + t.width/2 && b.y > t.y && b.y < t.y + t.height) {
+                        t.hit = true;
+                        gameState.bullets.splice(i, 1);
+                        handleAnswerSelected(t);
+                        break;
+                    }
+                }
+            }
+
+            gameState.targets.forEach(t => {
+                t.x += t.vx;
+                if (t.x - t.width/2 < 10 || t.x + t.width/2 > canvas.width - 10) {
+                    t.vx *= -1;
+                }
+            });
+        }
+
+        function handleAnswerSelected(target) {
+            gameState.isAnswerWaiting = true;
+            const currentQ = questionsPool[gameState.currentQIndex];
+
+            if (target.isCorrect) {
+                gameState.score += currentQ.points;
+                target.color = "#10b981";
+            } else {
+                target.color = "#ef4444";
+            }
+
+            gameState.targets.forEach(t => {
+                if (t.isCorrect) t.color = "#10b981";
+            });
+
+            setTimeout(() => {
+                gameState.currentQIndex++;
+                loadQuestion(gameState.currentQIndex);
+            }, 1200);
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "#ffffff";
+            for (let i = 0; i < 25; i++) {
+                const sx = (i * 37) % canvas.width;
+                const sy = (i * 73 + Date.now() * 0.02) % canvas.height;
+                ctx.fillRect(sx, sy, (i % 2) + 1, (i % 2) + 1);
+            }
+
+            const px = gameState.playerX;
+            const py = gameState.playerY;
+
+            ctx.fillStyle = "#f59e0b";
+            ctx.beginPath();
+            ctx.moveTo(px + 18, py + 35);
+            ctx.lineTo(px + 25, py + 48 + Math.random() * 6);
+            ctx.lineTo(px + 32, py + 35);
+            ctx.fill();
+
+            ctx.fillStyle = "#06b6d4";
+            ctx.beginPath();
+            ctx.moveTo(px + 25, py);
+            ctx.lineTo(px + 50, py + 35);
+            ctx.lineTo(px + 25, py + 28);
+            ctx.lineTo(px, py + 35);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = "#a5f3fc";
+            ctx.beginPath();
+            ctx.arc(px + 25, py + 15, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#ef4444";
+            gameState.bullets.forEach(b => {
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            gameState.targets.forEach(t => {
+                const tx = t.x - t.width / 2;
+                const ty = t.y;
+
+                ctx.fillStyle = t.color || "rgba(15, 23, 42, 0.9)";
+                ctx.strokeStyle = t.color || "#0284c7";
+                ctx.lineWidth = 2;
+
+                ctx.beginPath();
+                ctx.roundRect(tx, ty, t.width, t.height, 12);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 15px 'KFGQPC Uthman Taha Naskh', 'Amiri', serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(t.textAr, t.x, ty + t.height / 2);
+            });
+        }
+
+        function gameLoop() {
+            updateGame();
+            drawGame();
+            gameState.gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            if (gameState.gameLoopId) cancelAnimationFrame(gameState.gameLoopId);
+
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            document.getElementById('res-name').innerText = gameState.playerName;
+            document.getElementById('res-score').innerText = gameState.score;
+
+            const maxScore = 46;
+            const percent = Math.round((gameState.score / maxScore) * 100);
+            document.getElementById('res-percent').innerText = `${percent}%`;
+        }
+
+        function restartGame() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('player-name').value = '';
+        }
+    </script>
+</body>
+</html>
